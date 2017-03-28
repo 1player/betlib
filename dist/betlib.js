@@ -145,91 +145,66 @@ var Returns = exports.Returns = function () {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.SingleBet = undefined;
+exports.Bet = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _returns = __webpack_require__(0);
 
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var Bet = function () {
-  function Bet(unitStake, isEachWay) {
+// Bet types
+var BET_TYPES = {
+  single: function single(selections, returns, isEachWay) {
+    // calculate win returns
+    selections.forEach(function (selection) {
+      if (selection.outcome == 'win') {
+        returns.addBetReturn(returns.unitStake * selection.decimalWinOdds());
+      } else {
+        returns.addBetReturn(0);
+      }
+    });
+
+    // calculate place returns
+    if (isEachWay) {
+      selections.forEach(function (selection) {
+        if (selection.outcome == 'win' || selection.outcome == 'place') {
+          returns.addBetReturn(returns.unitStake * selection.decimalPlaceOdds());
+        } else {
+          returns.addBetReturn(0);
+        }
+      });
+    }
+  }
+};
+
+// Bet constructor
+
+var Bet = exports.Bet = function () {
+  function Bet(type, unitStake, isEachWay) {
     _classCallCheck(this, Bet);
+
+    this.type = type;
+
+    if (!BET_TYPES.hasOwnProperty(type)) {
+      throw new Error("Unknown bet type " + type.toString());
+    }
 
     this.unitStake = unitStake;
     this.isEachWay = isEachWay;
   }
 
   _createClass(Bet, [{
-    key: 'numberOfBets',
-    value: function numberOfBets(selections) {
-      throw new Error('Unimplemented.');
-    }
-  }, {
-    key: 'calculateReturns',
-    value: function calculateReturns(selections, returns) {
-      throw new Error('Unimplemented.');
-    }
-  }, {
     key: 'settle',
     value: function settle(selections) {
       var returns = new _returns.Returns(this.unitStake);
-      this.calculateReturns(selections, returns);
+      BET_TYPES[this.type](selections, returns, this.isEachWay);
       return returns;
     }
   }]);
 
   return Bet;
 }();
-
-var SingleBet = exports.SingleBet = function (_Bet) {
-  _inherits(SingleBet, _Bet);
-
-  function SingleBet() {
-    _classCallCheck(this, SingleBet);
-
-    return _possibleConstructorReturn(this, (SingleBet.__proto__ || Object.getPrototypeOf(SingleBet)).apply(this, arguments));
-  }
-
-  _createClass(SingleBet, [{
-    key: 'numberOfBets',
-    value: function numberOfBets(selections) {
-      return this.selections.length;
-    }
-  }, {
-    key: 'calculateReturns',
-    value: function calculateReturns(selections, returns) {
-      var _this2 = this;
-
-      // calculate win returns
-      selections.forEach(function (selection) {
-        if (selection.outcome == 'win') {
-          returns.addBetReturn(_this2.unitStake * selection.decimalWinOdds());
-        } else {
-          returns.addBetReturn(0);
-        }
-      });
-
-      // calculate place returns
-      if (this.isEachWay) {
-        selections.forEach(function (selection) {
-          if (selection.outcome == 'win' || selection.outcome == 'place') {
-            returns.addBetReturn(_this2.unitStake * selection.decimalPlaceOdds());
-          } else {
-            returns.addBetReturn(0);
-          }
-        });
-      }
-    }
-  }]);
-
-  return SingleBet;
-}(Bet);
 
 /***/ }),
 /* 2 */
@@ -679,12 +654,6 @@ Object.defineProperty(exports, 'Bet', {
   enumerable: true,
   get: function get() {
     return _bet.Bet;
-  }
-});
-Object.defineProperty(exports, 'SingleBet', {
-  enumerable: true,
-  get: function get() {
-    return _bet.SingleBet;
   }
 });
 

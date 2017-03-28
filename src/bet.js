@@ -1,51 +1,47 @@
 import { Returns } from './returns.js';
 
-class Bet {
-  constructor(unitStake, isEachWay) {
-    this.unitStake = unitStake;
-    this.isEachWay = isEachWay;
-  }
-
-  numberOfBets(selections) {
-    throw new Error('Unimplemented.');
-  }
-
-  calculateReturns(selections, returns) {
-    throw new Error('Unimplemented.');
-  }
-
-  settle(selections) {
-    let returns = new Returns(this.unitStake);
-    this.calculateReturns(selections, returns);
-    return returns;
-  }
-}
-
-export class SingleBet extends Bet {
-  numberOfBets(selections) {
-    return this.selections.length;
-  }
-
-  calculateReturns(selections, returns) {
+// Bet types
+const BET_TYPES = {
+  single: (selections, returns, isEachWay) => {
     // calculate win returns
     selections.forEach(selection => {
       if (selection.outcome == 'win') {
-	returns.addBetReturn(this.unitStake * selection.decimalWinOdds());
+	returns.addBetReturn(returns.unitStake * selection.decimalWinOdds());
       } else {
 	returns.addBetReturn(0);
       }
     });
 
     // calculate place returns
-    if (this.isEachWay) {
+    if (isEachWay) {
       selections.forEach(selection => {
 	if (selection.outcome == 'win' ||
 	    selection.outcome == 'place') {
-	  returns.addBetReturn(this.unitStake * selection.decimalPlaceOdds());
+	  returns.addBetReturn(returns.unitStake * selection.decimalPlaceOdds());
 	} else {
 	  returns.addBetReturn(0);
 	}
       });
     }
+  }
+};
+
+// Bet constructor
+export class Bet {
+  constructor(type, unitStake, isEachWay) {
+    this.type = type;
+
+    if (!BET_TYPES.hasOwnProperty(type)) {
+      throw new Error("Unknown bet type " + type.toString());
+    }
+
+    this.unitStake = unitStake;
+    this.isEachWay = isEachWay;
+  }
+
+  settle(selections) {
+    let returns = new Returns(this.unitStake);
+    BET_TYPES[this.type](selections, returns, this.isEachWay);
+    return returns;
   }
 }

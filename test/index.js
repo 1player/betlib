@@ -5,7 +5,7 @@ var betlib = require('../dist/betlib');
 
 describe('single bet', () => {
   it('non-each-way is calculated correctly', () => {
-    const bet = new betlib.SingleBet(100, false);
+    const bet = new betlib.Bet('single', 100, false);
     const returns = bet.settle([
       betlib.Selection.win('fractional', '9/2', '1/5'),
       betlib.Selection.place('fractional', '9/2', '1/5'),
@@ -19,7 +19,7 @@ describe('single bet', () => {
   });
 
   it('each-way is calculated correctly', () => {
-    const bet = new betlib.SingleBet(100, true);
+    const bet = new betlib.Bet('single', 100, true);
     const returns = bet.settle([
       betlib.Selection.win('fractional', '9/2', '1/5'),
       betlib.Selection.place('fractional', '9/2', '1/5'),
