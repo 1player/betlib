@@ -1,0 +1,36 @@
+{
+  "name": "betlib",
+  "version": "0.0.1",
+  "description": "A JS library to calculate popular UK bets",
+  "main": "./dist/betlib.js",
+  "dependencies": {
+    "babel-cli": "^6.24.0",
+    "babel-preset-es2015": "^6.24.0",
+    "oddslib": "^1.0.2"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.24.0",
+    "babel-preset-es2015": "^6.24.0",
+    "chai": "^3.5.0",
+    "mocha": "^3.2.0"
+  },
+  "scripts": {
+    "build": "babel src --presets babel-preset-es2015 --out-dir dist",
+    "test": "npm run build && mocha --compilers js:babel-core/register --reporter spec"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/1player/betlib.git"
+  },
+  "keywords": [
+    "uk",
+    "betting",
+    "calculator"
+  ],
+  "author": "Stéphane Travostino <steph@combo.cc>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/1player/betlib/issues"
+  },
+  "homepage": "https://github.com/1player/betlib#readme"
+}
