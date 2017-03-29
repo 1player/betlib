@@ -73,11 +73,43 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 5);
+/******/ 	return __webpack_require__(__webpack_require__.s = 7);
 /******/ })
 /************************************************************************/
 /******/ ([
 /* 0 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+// http://stackoverflow.com/a/35858868
+var makeError = function makeError(name) {
+  var cls = function cls(message) {
+    _classCallCheck(this, cls);
+
+    this.name = name;
+    this.message = message;
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, this.constructor);
+    } else {
+      this.stack = new Error(message).stack;
+    }
+  };
+  cls.prototype = Object.create(Error.prototype);
+  return cls;
+};
+
+var InvalidSelectionCountError = exports.InvalidSelectionCountError = makeError('InvalidSelectionCountError');
+
+/***/ }),
+/* 1 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -136,7 +168,7 @@ var Returns = exports.Returns = function () {
 }();
 
 /***/ }),
-/* 1 */
+/* 2 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -149,12 +181,25 @@ exports.Bet = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _returns = __webpack_require__(0);
+var _returns = __webpack_require__(1);
+
+var _errors = __webpack_require__(0);
+
+var errors = _interopRequireWildcard(_errors);
+
+var _foreachCombination = __webpack_require__(4);
+
+var _foreachCombination2 = _interopRequireDefault(_foreachCombination);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 // Bet types
 var BET_TYPES = {
+  // Single bet
   single: function single(selections, returns, isEachWay) {
     // calculate win returns
     selections.forEach(function (selection) {
@@ -175,7 +220,31 @@ var BET_TYPES = {
         }
       });
     }
+  },
+
+  // Double bet
+  double: function double(selections, returns, isEachWay) {
+    if (selections.length < 2) {
+      throw new errors.InvalidSelectionCountError("Minimum 2 selections required");
+    }
+
+    (0, _foreachCombination2.default)(selections, 2, function (a, b) {
+      if (a.outcome == 'win' && b.outcome == 'win') {
+        returns.addBetReturn(returns.unitStake * a.decimalWinOdds() * b.decimalWinOdds());
+      } else {
+        returns.addBetReturn(0);
+      }
+
+      if (isEachWay) {
+        if (a.outcome != 'lose' && b.outcome != 'lose') {
+          returns.addBetReturn(returns.unitStake * a.decimalPlaceOdds() * b.decimalPlaceOdds());
+        } else {
+          returns.addBetReturn(0);
+        }
+      }
+    });
   }
+
 };
 
 // Bet constructor
@@ -207,7 +276,7 @@ var Bet = exports.Bet = function () {
 }();
 
 /***/ }),
-/* 2 */
+/* 3 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -220,7 +289,7 @@ exports.Selection = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _oddslib = __webpack_require__(4);
+var _oddslib = __webpack_require__(6);
 
 var _oddslib2 = _interopRequireDefault(_oddslib);
 
@@ -277,7 +346,81 @@ var Selection = exports.Selection = function () {
 }();
 
 /***/ }),
-/* 3 */
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var NUM_EXPAND = 32;
+
+function generateForeach(k) {
+  var funcName = "foreach" + k + "Comb";
+  var code = ["function ", funcName, "(x,f){var n=x.length|0"];
+  for (var i = 0; i < k; ++i) {
+    code.push(",i", i);
+  }
+  code.push(",r;");
+  for (var i = 0; i < k; ++i) {
+    code.push("for(i", i, "=", i === 0 ? "0" : "1+i" + (i - 1), ";i", i, "<n;++i", i, "){");
+  }
+  code.push("r=f(");
+  for (var i = 0; i < k; ++i) {
+    if (i > 0) {
+      code.push(",");
+    }
+    code.push("x[i", i, "]");
+  }
+  code.push(");if(r!==void 0)return r;");
+  for (var i = 0; i < k; ++i) {
+    code.push("}");
+  }
+  code.push("};return ", funcName);
+  var proc = new Function(code.join(""));
+  return proc();
+}
+
+function noop() {}
+
+var CACHE = {};
+function bigCombination(x, k, f) {
+  if (k < 0) {
+    return;
+  }
+  var proc = CACHE[k];
+  if (!proc) {
+    CACHE[k] = proc = generateForeach(k);
+  }
+  return proc(x, f);
+}
+
+function createExports() {
+  var list = [noop];
+  for (var i = 1; i < NUM_EXPAND; ++i) {
+    list.push(generateForeach(i));
+  }
+  list.push(bigCombination);
+  var funcName = "dispatchCombination";
+  var code = ["function ", funcName, "(x,k,f){switch(k){"];
+  var args = [];
+  for (var i = 0; i < NUM_EXPAND; ++i) {
+    code.push("case ", i, ":return c", i, "(x,f);");
+    args.push("c" + i);
+  }
+  code.push("default:return b(x,f)}}return ", funcName);
+  args.push("b");
+  args.push(code.join(""));
+  var proc = Function.apply(void 0, args);
+  module.exports = proc.apply(void 0, list);
+  for (var i = 0; i < NUM_EXPAND; ++i) {
+    module.exports[i] = list[i];
+  }
+}
+
+createExports();
+
+/***/ }),
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -346,13 +489,13 @@ function getMaxNumerator(f) {
 module.exports = approximateFraction;
 
 /***/ }),
-/* 4 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var approximateFraction = __webpack_require__(3);
+var approximateFraction = __webpack_require__(5);
 
 // Object.assign polyfill
 if (typeof Object.assign != 'function') {
@@ -620,7 +763,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 5 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -630,7 +773,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _returns = __webpack_require__(0);
+var _returns = __webpack_require__(1);
 
 Object.defineProperty(exports, 'Returns', {
   enumerable: true,
@@ -639,7 +782,7 @@ Object.defineProperty(exports, 'Returns', {
   }
 });
 
-var _selection = __webpack_require__(2);
+var _selection = __webpack_require__(3);
 
 Object.defineProperty(exports, 'Selection', {
   enumerable: true,
@@ -648,12 +791,21 @@ Object.defineProperty(exports, 'Selection', {
   }
 });
 
-var _bet = __webpack_require__(1);
+var _bet = __webpack_require__(2);
 
 Object.defineProperty(exports, 'Bet', {
   enumerable: true,
   get: function get() {
     return _bet.Bet;
+  }
+});
+
+var _errors = __webpack_require__(0);
+
+Object.defineProperty(exports, 'InvalidSelectionCountError', {
+  enumerable: true,
+  get: function get() {
+    return _errors.InvalidSelectionCountError;
   }
 });
 
