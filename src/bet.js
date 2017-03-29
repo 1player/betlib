@@ -52,6 +52,29 @@ const BET_TYPES = {
     });
   },
 
+  // Treble
+  treble: (selections, returns, isEachWay) => {
+    if (selections.length < 3) {
+      throw new errors.InvalidSelectionCountError("Minimum 3 selections required");
+    }
+
+    foreachCombination(selections, 3, (a, b, c) => {
+      if (a.outcome == 'win' && b.outcome == 'win' && c.outcome == 'win') {
+	returns.addBetReturn(returns.unitStake * a.decimalWinOdds() * b.decimalWinOdds() * c.decimalWinOdds());
+      } else {
+	returns.addBetReturn(0);
+      }
+
+      if (isEachWay) {
+	if (a.outcome != 'lose' && b.outcome != 'lose' && c.outcome != 'lose') {
+	  returns.addBetReturn(returns.unitStake * a.decimalPlaceOdds() * b.decimalPlaceOdds() * c.decimalPlaceOdds());
+	} else {
+	  returns.addBetReturn(0);
+	}
+      }
+    });
+  },
+
 };
 
 // Bet constructor
