@@ -347,12 +347,16 @@ var Selection = exports.Selection = function () {
     }
   }], [{
     key: 'win',
-    value: function win(oddsFormat, winOdds, placeOddsRatio) {
+    value: function win(oddsFormat, winOdds) {
+      var placeOddsRatio = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : "1/1";
+
       return new Selection('win', _oddslib2.default.from(oddsFormat, winOdds), _oddslib2.default.from('fractional', placeOddsRatio));
     }
   }, {
     key: 'place',
-    value: function place(oddsFormat, winOdds, placeOddsRatio) {
+    value: function place(oddsFormat, winOdds) {
+      var placeOddsRatio = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : "1/1";
+
       return new Selection('place', _oddslib2.default.from(oddsFormat, winOdds), _oddslib2.default.from('fractional', placeOddsRatio));
     }
   }, {

@@ -14,11 +14,11 @@ export class Selection {
   }
 
   // Static constructors
-  static win(oddsFormat, winOdds, placeOddsRatio) {
+  static win(oddsFormat, winOdds, placeOddsRatio = "1/1") {
     return new Selection('win', oddslib.from(oddsFormat, winOdds), oddslib.from('fractional', placeOddsRatio));
   }
 
-  static place(oddsFormat, winOdds, placeOddsRatio) {
+  static place(oddsFormat, winOdds, placeOddsRatio = "1/1") {
     return new Selection('place', oddslib.from(oddsFormat, winOdds), oddslib.from('fractional', placeOddsRatio));
   }
 
