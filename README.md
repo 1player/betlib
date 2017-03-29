@@ -12,9 +12,14 @@ A JS library to calculate popular UK bets
 - [ ] Trixie
 - [ ] Yankee
 - [ ] Canadian
+- [ ] Heinz
+- [ ] Super Heinz
+- [ ] Goliath
+- [ ] Block
 
 ## Full cover bets with singles
 - [ ] Patent
+- [ ] Yap
 - [ ] Lucky 15
 - [ ] Lucky 31
 - [ ] Lucky 63
