@@ -115,38 +115,3 @@ describe('treble bet', () => {
     returns.totalReturn().should.be.closeTo(2475.80, 0.5);
   });
 });
-
-describe('returns', () => {
-  it('works with a single bet', () => {
-    let returns = new betlib.Returns(100);
-    returns.addBetReturn(450);
-
-    returns.totalStake().should.equal(100);
-    returns.numberOfBets().should.equal(1);
-    returns.totalProfit().should.equal(350);
-    returns.totalReturn().should.equal(450);
-  });
-
-  it('works with multiple bets', () => {
-    let returns = new betlib.Returns(100);
-    returns.addBetReturn(550);
-    returns.addBetReturn(0);
-    returns.addBetReturn(0);
-
-    returns.totalStake().should.equal(300);
-    returns.numberOfBets().should.equal(3);
-    returns.totalProfit().should.equal(250);
-    returns.totalReturn().should.equal(550);
-  });
-});
-
-describe('selection', () => {
-  it('sets odds correctly', () => {
-    let selection = betlib.Selection.win('fractional', '9/2', '1/5');
-
-    selection.decimalWinOdds().should.equal(5.5);
-    selection.winOdds.to('indonesian').should.equal(4.5);
-
-    selection.decimalPlaceOdds().should.equal(1.9);
-  });
-});
