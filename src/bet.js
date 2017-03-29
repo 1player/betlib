@@ -3,78 +3,60 @@ import * as errors from './errors.js';
 
 import foreachCombination from 'foreach-combination';
 
+// Functional bet logic
+
+function sequence(...fns) {
+  return function (...args) {
+    for (let i = 0; i < fns.length; i++) {
+      fns[i].apply(this, args);
+    }
+  };
+}
+
+// Enforce a certain number of selections
+function minimumSelections(n) {
+  return (allSelections, returns, isEachWay) => {
+    if (allSelections.length < n) {
+      throw new errors.InvalidSelectionCountError(`Expected at least ${n} selections`);
+    }
+  };
+}
+
+// Calculate a simple combination bet
+function combinationBet(n) {
+  return (allSelections, returns, isEachWay) => {
+    foreachCombination(allSelections, n, (...selections) => {
+
+      // Calculate win returns
+      if (selections.every(selection => selection.outcome == 'win')) {
+	returns.addBetReturn(selections.reduce(
+	  (acc, selection) => acc * selection.decimalWinOdds(),
+	  returns.unitStake));
+      } else {
+	returns.addBetReturn(0);
+      }
+
+      // Calculate place returns, if this is a each-way bet
+      if (isEachWay) {
+	if (selections.every(selection => selection.outcome != 'lose')) {
+	  returns.addBetReturn(selections.reduce(
+	    (acc, selection) => acc * selection.decimalPlaceOdds(),
+	    returns.unitStake));
+	} else {
+	  returns.addBetReturn(0);
+	}
+      }
+    });
+
+  };
+}
+
 // Bet types
 const BET_TYPES = {
-  // Single bet
-  single: (selections, returns, isEachWay) => {
-    // calculate win returns
-    selections.forEach(selection => {
-      if (selection.outcome == 'win') {
-	returns.addBetReturn(returns.unitStake * selection.decimalWinOdds());
-      } else {
-	returns.addBetReturn(0);
-      }
-    });
-
-    // calculate place returns
-    if (isEachWay) {
-      selections.forEach(selection => {
-	if (selection.outcome == 'win' ||
-	    selection.outcome == 'place') {
-	  returns.addBetReturn(returns.unitStake * selection.decimalPlaceOdds());
-	} else {
-	  returns.addBetReturn(0);
-	}
-      });
-    }
-  },
-
-  // Double bet
-  double: (selections, returns, isEachWay) => {
-    if (selections.length < 2) {
-      throw new errors.InvalidSelectionCountError("Minimum 2 selections required");
-    }
-
-    foreachCombination(selections, 2, (a, b) => {
-      if (a.outcome == 'win' && b.outcome == 'win') {
-	returns.addBetReturn(returns.unitStake * a.decimalWinOdds() * b.decimalWinOdds());
-      } else {
-	returns.addBetReturn(0);
-      }
-
-      if (isEachWay) {
-	if (a.outcome != 'lose' && b.outcome != 'lose') {
-	  returns.addBetReturn(returns.unitStake * a.decimalPlaceOdds() * b.decimalPlaceOdds());
-	} else {
-	  returns.addBetReturn(0);
-	}
-      }
-    });
-  },
-
-  // Treble
-  treble: (selections, returns, isEachWay) => {
-    if (selections.length < 3) {
-      throw new errors.InvalidSelectionCountError("Minimum 3 selections required");
-    }
-
-    foreachCombination(selections, 3, (a, b, c) => {
-      if (a.outcome == 'win' && b.outcome == 'win' && c.outcome == 'win') {
-	returns.addBetReturn(returns.unitStake * a.decimalWinOdds() * b.decimalWinOdds() * c.decimalWinOdds());
-      } else {
-	returns.addBetReturn(0);
-      }
-
-      if (isEachWay) {
-	if (a.outcome != 'lose' && b.outcome != 'lose' && c.outcome != 'lose') {
-	  returns.addBetReturn(returns.unitStake * a.decimalPlaceOdds() * b.decimalPlaceOdds() * c.decimalPlaceOdds());
-	} else {
-	  returns.addBetReturn(0);
-	}
-      }
-    });
-  },
-
+  // Simple bets
+  single: combinationBet(1),
+  double: sequence(minimumSelections(2), combinationBet(2)),
+  treble: sequence(minimumSelections(3), combinationBet(3)),
 };
 
 // Bet constructor
