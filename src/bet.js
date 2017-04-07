@@ -22,42 +22,90 @@ function minimumSelections(n) {
   };
 }
 
-// Calculate a simple combination bet
-function combinationBet(n) {
-  return (allSelections, returns, isEachWay) => {
-    foreachCombination(allSelections, n, (...selections) => {
-
-      // Calculate win returns
-      if (selections.every(selection => selection.outcome == 'win')) {
+function settle(returns, isEachWay) {
+  return (...selections) => {
+    // Calculate win returns
+    if (selections.every(selection => selection.outcome == 'win')) {
+      returns.addBetReturn(selections.reduce(
+	(acc, selection) => acc * selection.decimalWinOdds(),
+	returns.unitStake));
+    } else {
+      returns.addBetReturn(0);
+    }
+    // Calculate place returns, if this is a each-way bet
+    if (isEachWay) {
+      if (selections.every(selection => selection.outcome != 'lose')) {
 	returns.addBetReturn(selections.reduce(
-	  (acc, selection) => acc * selection.decimalWinOdds(),
+	  (acc, selection) => acc * selection.decimalPlaceOdds(),
 	  returns.unitStake));
       } else {
 	returns.addBetReturn(0);
       }
-
-      // Calculate place returns, if this is a each-way bet
-      if (isEachWay) {
-	if (selections.every(selection => selection.outcome != 'lose')) {
-	  returns.addBetReturn(selections.reduce(
-	    (acc, selection) => acc * selection.decimalPlaceOdds(),
-	    returns.unitStake));
-	} else {
-	  returns.addBetReturn(0);
-	}
-      }
-    });
-
+    }
   };
 }
 
-// Defer calculation to another bet `n` times
-function defer(type, n = 1) {
+// Calculate a simple combination bet
+function combinationBet(n) {
   return (allSelections, returns, isEachWay) => {
-    for (let i = 0; i < n; i++) {
-      BET_TYPES[type](allSelections, returns, isEachWay);
-    }
+    foreachCombination(allSelections, n, settle(returns, isEachWay));
   };
+}
+
+// Applying multiple combination bets of increasing order
+// `bets` is an array specifying the number of bets of order `i`th
+// where `i` is the index.
+// example: cover([0, 3, 1, 7]) will calculate
+// - 0 single bets (1-fold accumulator)
+// - 3 double bets (2-fold accumulator)
+// - 1 treble bets (3-fold accumulator)
+// - 7 4-fold accumulators
+// function cover(bets) {
+//   return (allSelections, returns, isEachWay) => {
+//     // Enforce minimum selections
+//     minimumSelections(bets.length)(allSelections, returns, isEachWay);
+//     // Calculate returns for each bet type
+//     for (let i = 0, order = 1; i < bets.length; i++, order++) {
+//       let count = bets[i];
+//       if (count < 1) {
+// 	continue;
+//       }
+//       let fn = combinationBet(order);
+//       console.log(count, 'bets of order', order);
+//       foreachCombination(allSelections, bets.length, (...selections) => {
+// 	fn(selections, returns, isEachWay);
+//       });
+//     }
+//   };
+// }
+
+function cover(n, withSingles = false) {
+  return (allSelections, returns, isEachWay) => {
+    minimumSelections(n)(allSelections, returns, isEachWay);
+    foreachCombination(allSelections, n, (...selections) => {
+      for (let i = withSingles ? 1 : 2; i <= n; i++) {
+	combinationBet(i)(selections, returns, isEachWay);
+      }
+    });
+  };
+}
+
+function getBetFunction(type) {
+  if (BET_TYPES.hasOwnProperty(type)) {
+    return BET_TYPES[type];
+  }
+
+  // Handle custom accumulator bet.
+  if (type.slice(0, 11) === "accumulator") {
+    var pieces = type.split(":", 2);
+    let foldSize = pieces.length === 1 ? 4 : parseInt(pieces[1]);
+    if (isNaN(foldSize) || foldSize < 4) {
+      throw new Error("Invalid accumulator fold size.");
+    }
+    return sequence(minimumSelections(foldSize), combinationBet(foldSize));
+  }
+
+  throw new Error("Unknown bet type " + type.toString());
 }
 
 // Bet types
@@ -66,10 +114,23 @@ const BET_TYPES = {
   single: combinationBet(1),
   double: sequence(minimumSelections(2), combinationBet(2)),
   treble: sequence(minimumSelections(3), combinationBet(3)),
-  // accumulator is handled in the bet constructor
+  // accumulator is handled in `getBetFunction`
 
   // Full cover
-  trixie: sequence(defer('double', 3), defer('treble')),
+  trixie:     cover(3),
+  yankee:     cover(4),
+  canadian:   cover(5),
+  heinz:      cover(6),
+  superHeinz: cover(7),
+  goliath:    cover(8),
+
+  // Full cover with singles
+  patent:  cover(3, true),
+  lucky15: cover(4, true),
+  lucky31: cover(5, true),
+  lucky63: cover(6, true),
+  // yap is a lucky 15 without any bonus applied, which we do not support anyway
+  yap:     cover(4, true),
 };
 
 // Bet constructor
@@ -78,21 +139,7 @@ export class Bet {
     this.type = type;
     this.unitStake = unitStake;
     this.isEachWay = isEachWay;
-
-    if (BET_TYPES.hasOwnProperty(type)) {
-      this.betFn = BET_TYPES[type];
-    } else if (type.slice(0, 11) === "accumulator") {
-      // Handle custom accumulator bet.
-      // I really hate this.
-      var pieces = type.split(":", 2);
-      let foldSize = pieces.length === 1 ? 4 : parseInt(pieces[1]);
-      if (isNaN(foldSize) || foldSize < 4) {
-	throw new Error("Invalid accumulator fold size.");
-      }
-      this.betFn = sequence(minimumSelections(foldSize), combinationBet(foldSize));
-    } else {
-      throw new Error("Unknown bet type " + type.toString());
-    }
+    this.betFn = getBetFunction(type);
   }
 
   settle(selections) {
