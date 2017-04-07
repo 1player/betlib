@@ -115,3 +115,49 @@ describe('treble bet', () => {
     returns.totalReturn().should.be.closeTo(2475.80, 0.5);
   });
 });
+
+describe('accumulator bet', () => {
+  it('requires a fold size of at least 4', () => {
+    expect(() => {
+      new betlib.Bet('accumulator:3', 100, false);
+    }).to.throw(Error);
+  });
+
+  it('non-each-way is calculated correctly', () => {
+    const bet = new betlib.Bet('accumulator:4', 100, false);
+    const returns = bet.settle([
+      betlib.Selection.win('fractional', '9/2', '1/5'),
+      betlib.Selection.place('fractional', '9/2', '1/5'),
+      betlib.Selection.win('fractional', '1/1'),
+      betlib.Selection.win('fractional', '2/3', '1/5'),
+      betlib.Selection.win('fractional', '1/3', '1/5'),
+      betlib.Selection.lose(),
+      betlib.Selection.lose(),
+      betlib.Selection.place('fractional', '1/1', '1/5'),
+    ]);
+
+    returns.totalStake().should.equal(7000);
+    returns.numberOfBets().should.equal(70);
+    returns.totalProfit().should.be.closeTo(-4555.56, 0.01);
+    returns.totalReturn().should.be.closeTo(2444.44, 0.01);
+  });
+
+  it('each-way is calculated correctly', () => {
+    const bet = new betlib.Bet('accumulator:5', 100, true);
+    const returns = bet.settle([
+      betlib.Selection.win('fractional', '9/2', '1/5'),
+      betlib.Selection.place('fractional', '9/2', '1/5'),
+      betlib.Selection.win('fractional', '1/1', '1/5'),
+      betlib.Selection.win('fractional', '2/3', '1/5'),
+      betlib.Selection.win('fractional', '1/3', '1/5'),
+      betlib.Selection.lose(),
+      betlib.Selection.lose(),
+      betlib.Selection.place('fractional', '1/1', '1/5'),
+    ]);
+
+    returns.totalStake().should.equal(11200);
+    returns.numberOfBets().should.equal(112);
+    returns.totalProfit().should.be.closeTo(-8347.47, 0.01);
+    returns.totalReturn().should.be.closeTo(2852.53, 0.01);
+  });
+});

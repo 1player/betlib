@@ -276,6 +276,7 @@ var BET_TYPES = {
   single: combinationBet(1),
   double: sequence(minimumSelections(2), combinationBet(2)),
   treble: sequence(minimumSelections(3), combinationBet(3)),
+  // accumulator is handled in the bet constructor
 
   // Full cover
   trixie: sequence(defer('double', 3), defer('treble'))
@@ -288,20 +289,30 @@ var Bet = exports.Bet = function () {
     _classCallCheck(this, Bet);
 
     this.type = type;
-
-    if (!BET_TYPES.hasOwnProperty(type)) {
-      throw new Error("Unknown bet type " + type.toString());
-    }
-
     this.unitStake = unitStake;
     this.isEachWay = isEachWay;
+
+    if (BET_TYPES.hasOwnProperty(type)) {
+      this.betFn = BET_TYPES[type];
+    } else if (type.slice(0, 11) === "accumulator") {
+      // Handle custom accumulator bet.
+      // I really hate this.
+      var pieces = type.split(":", 2);
+      var foldSize = pieces.length === 1 ? 4 : parseInt(pieces[1]);
+      if (isNaN(foldSize) || foldSize < 4) {
+        throw new Error("Invalid accumulator fold size.");
+      }
+      this.betFn = sequence(minimumSelections(foldSize), combinationBet(foldSize));
+    } else {
+      throw new Error("Unknown bet type " + type.toString());
+    }
   }
 
   _createClass(Bet, [{
     key: 'settle',
     value: function settle(selections) {
       var returns = new _returns.Returns(this.unitStake);
-      BET_TYPES[this.type](selections, returns, this.isEachWay);
+      this.betFn(selections, returns, this.isEachWay);
       return returns;
     }
   }]);

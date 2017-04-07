@@ -9,7 +9,7 @@ A JS library to calculate popular UK bets
 - [x] Single bet
 - [x] Double bet
 - [x] Treble
-- [ ] Accumulator
+- [x] Accumulator
 
 ## Full cover bets
 - [x] Trixie
