@@ -3,28 +3,13 @@ import * as errors from './errors.js';
 
 import foreachCombination from 'foreach-combination';
 
-// Functional bet logic
-
-function sequence(...fns) {
-  return function (...args) {
-    for (let i = 0; i < fns.length; i++) {
-      fns[i].apply(this, args);
-    }
-  };
-}
-
-// Enforce a certain number of selections
-function minimumSelections(n) {
+// Calculate a simple combination bet
+function combinationBet(n) {
   return (allSelections, returns, isEachWay) => {
     if (allSelections.length < n) {
       throw new errors.InvalidSelectionCountError(`Expected at least ${n} selections`);
     }
-  };
-}
 
-// Calculate a simple combination bet
-function combinationBet(n) {
-  return (allSelections, returns, isEachWay) => {
     foreachCombination(allSelections, n, (...selections) => {
       // Calculate win returns
       if (selections.every(selection => selection.outcome == 'win')) {
@@ -51,7 +36,10 @@ function combinationBet(n) {
 // Calculate full cover bet
 function cover(n, withSingles = false) {
   return (allSelections, returns, isEachWay) => {
-    minimumSelections(n)(allSelections, returns, isEachWay);
+    if (allSelections.length < n) {
+      throw new errors.InvalidSelectionCountError(`Expected at least ${n} selections`);
+    }
+
     foreachCombination(allSelections, n, (...selections) => {
       for (let i = withSingles ? 1 : 2; i <= n; i++) {
 	combinationBet(i)(selections, returns, isEachWay);
@@ -64,9 +52,9 @@ function cover(n, withSingles = false) {
 const BET_TYPES = {
   // Simple bets
   single: combinationBet(1),
-  double: sequence(minimumSelections(2), combinationBet(2)),
-  treble: sequence(minimumSelections(3), combinationBet(3)),
-  // accumulator is handled in `getBetFunction`
+  double: combinationBet(2),
+  treble: combinationBet(3),
+  // accumulator is handled in `Bet` constructor
 
   // Full cover
   trixie:     cover(3),
@@ -102,7 +90,7 @@ export class Bet {
       if (isNaN(foldSize) || foldSize < 4) {
 	throw new Error("Invalid accumulator fold size.");
       }
-      this.betFn = sequence(minimumSelections(foldSize), combinationBet(foldSize));
+      this.betFn = combinationBet(foldSize);
     } else {
       throw new Error("Unknown bet type " + type.toString());
     }

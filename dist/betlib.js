@@ -197,39 +197,16 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-// Functional bet logic
-
-function sequence() {
-  for (var _len = arguments.length, fns = Array(_len), _key = 0; _key < _len; _key++) {
-    fns[_key] = arguments[_key];
-  }
-
-  return function () {
-    for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-      args[_key2] = arguments[_key2];
-    }
-
-    for (var i = 0; i < fns.length; i++) {
-      fns[i].apply(this, args);
-    }
-  };
-}
-
-// Enforce a certain number of selections
-function minimumSelections(n) {
+// Calculate a simple combination bet
+function combinationBet(n) {
   return function (allSelections, returns, isEachWay) {
     if (allSelections.length < n) {
       throw new errors.InvalidSelectionCountError('Expected at least ' + n + ' selections');
     }
-  };
-}
 
-// Calculate a simple combination bet
-function combinationBet(n) {
-  return function (allSelections, returns, isEachWay) {
     (0, _foreachCombination2.default)(allSelections, n, function () {
-      for (var _len3 = arguments.length, selections = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-        selections[_key3] = arguments[_key3];
+      for (var _len = arguments.length, selections = Array(_len), _key = 0; _key < _len; _key++) {
+        selections[_key] = arguments[_key];
       }
 
       // Calculate win returns
@@ -263,10 +240,13 @@ function cover(n) {
   var withSingles = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
 
   return function (allSelections, returns, isEachWay) {
-    minimumSelections(n)(allSelections, returns, isEachWay);
+    if (allSelections.length < n) {
+      throw new errors.InvalidSelectionCountError('Expected at least ' + n + ' selections');
+    }
+
     (0, _foreachCombination2.default)(allSelections, n, function () {
-      for (var _len4 = arguments.length, selections = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-        selections[_key4] = arguments[_key4];
+      for (var _len2 = arguments.length, selections = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+        selections[_key2] = arguments[_key2];
       }
 
       for (var i = withSingles ? 1 : 2; i <= n; i++) {
@@ -280,9 +260,9 @@ function cover(n) {
 var BET_TYPES = {
   // Simple bets
   single: combinationBet(1),
-  double: sequence(minimumSelections(2), combinationBet(2)),
-  treble: sequence(minimumSelections(3), combinationBet(3)),
-  // accumulator is handled in `getBetFunction`
+  double: combinationBet(2),
+  treble: combinationBet(3),
+  // accumulator is handled in `Bet` constructor
 
   // Full cover
   trixie: cover(3),
@@ -321,7 +301,7 @@ var Bet = exports.Bet = function () {
         if (isNaN(foldSize) || foldSize < 4) {
           throw new Error("Invalid accumulator fold size.");
         }
-        this.betFn = sequence(minimumSelections(foldSize), combinationBet(foldSize));
+        this.betFn = combinationBet(foldSize);
       } else {
         throw new Error("Unknown bet type " + type.toString());
       }
