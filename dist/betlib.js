@@ -259,12 +259,26 @@ function combinationBet(n) {
   };
 }
 
+// Defer calculation to another bet `n` times
+function defer(type) {
+  var n = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
+
+  return function (allSelections, returns, isEachWay) {
+    for (var i = 0; i < n; i++) {
+      BET_TYPES[type](allSelections, returns, isEachWay);
+    }
+  };
+}
+
 // Bet types
 var BET_TYPES = {
   // Simple bets
   single: combinationBet(1),
   double: sequence(minimumSelections(2), combinationBet(2)),
-  treble: sequence(minimumSelections(3), combinationBet(3))
+  treble: sequence(minimumSelections(3), combinationBet(3)),
+
+  // Full cover
+  trixie: sequence(defer('double', 3), defer('treble'))
 };
 
 // Bet constructor

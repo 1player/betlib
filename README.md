@@ -2,6 +2,9 @@ A JS library to calculate popular UK bets
 
 # Todo
 
+- [ ] Rule 4
+- [ ] Dead Heat
+
 ## Simple bets
 - [x] Single bet
 - [x] Double bet
@@ -9,7 +12,7 @@ A JS library to calculate popular UK bets
 - [ ] Accumulator
 
 ## Full cover bets
-- [ ] Trixie
+- [x] Trixie
 - [ ] Yankee
 - [ ] Canadian
 - [ ] Heinz
