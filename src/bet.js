@@ -22,33 +22,29 @@ function minimumSelections(n) {
   };
 }
 
-function settle(returns, isEachWay) {
-  return (...selections) => {
-    // Calculate win returns
-    if (selections.every(selection => selection.outcome == 'win')) {
-      returns.addBetReturn(selections.reduce(
-	(acc, selection) => acc * selection.decimalWinOdds(),
-	returns.unitStake));
-    } else {
-      returns.addBetReturn(0);
-    }
-    // Calculate place returns, if this is a each-way bet
-    if (isEachWay) {
-      if (selections.every(selection => selection.outcome != 'lose')) {
+// Calculate a simple combination bet
+function combinationBet(n) {
+  return (allSelections, returns, isEachWay) => {
+    foreachCombination(allSelections, n, (...selections) => {
+      // Calculate win returns
+      if (selections.every(selection => selection.outcome == 'win')) {
 	returns.addBetReturn(selections.reduce(
-	  (acc, selection) => acc * selection.decimalPlaceOdds(),
+	  (acc, selection) => acc * selection.decimalWinOdds(),
 	  returns.unitStake));
       } else {
 	returns.addBetReturn(0);
       }
-    }
-  };
-}
-
-// Calculate a simple combination bet
-function combinationBet(n) {
-  return (allSelections, returns, isEachWay) => {
-    foreachCombination(allSelections, n, settle(returns, isEachWay));
+      // Calculate place returns, if this is a each-way bet
+      if (isEachWay) {
+	if (selections.every(selection => selection.outcome != 'lose')) {
+	  returns.addBetReturn(selections.reduce(
+	    (acc, selection) => acc * selection.decimalPlaceOdds(),
+	    returns.unitStake));
+	} else {
+	  returns.addBetReturn(0);
+	}
+      }
+    });
   };
 }
 
@@ -62,24 +58,6 @@ function cover(n, withSingles = false) {
       }
     });
   };
-}
-
-function getBetFunction(type) {
-  if (BET_TYPES.hasOwnProperty(type)) {
-    return BET_TYPES[type];
-  }
-
-  // Handle custom accumulator bet.
-  if (type.slice(0, 11) === "accumulator") {
-    var pieces = type.split(":", 2);
-    let foldSize = pieces.length === 1 ? 4 : parseInt(pieces[1]);
-    if (isNaN(foldSize) || foldSize < 4) {
-      throw new Error("Invalid accumulator fold size.");
-    }
-    return sequence(minimumSelections(foldSize), combinationBet(foldSize));
-  }
-
-  throw new Error("Unknown bet type " + type.toString());
 }
 
 // Bet types
@@ -113,7 +91,21 @@ export class Bet {
     this.type = type;
     this.unitStake = unitStake;
     this.isEachWay = isEachWay;
-    this.betFn = getBetFunction(type);
+
+    if (BET_TYPES.hasOwnProperty(type)) {
+      this.betFn = BET_TYPES[type];
+    }
+    // Handle custom accumulator bet.
+    else if (type.slice(0, 11) === "accumulator") {
+      var pieces = type.split(":", 2);
+      let foldSize = pieces.length === 1 ? 4 : parseInt(pieces[1]);
+      if (isNaN(foldSize) || foldSize < 4) {
+	throw new Error("Invalid accumulator fold size.");
+      }
+      this.betFn = sequence(minimumSelections(foldSize), combinationBet(foldSize));
+    } else {
+      throw new Error("Unknown bet type " + type.toString());
+    }
   }
 
   settle(selections) {
