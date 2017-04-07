@@ -52,33 +52,7 @@ function combinationBet(n) {
   };
 }
 
-// Applying multiple combination bets of increasing order
-// `bets` is an array specifying the number of bets of order `i`th
-// where `i` is the index.
-// example: cover([0, 3, 1, 7]) will calculate
-// - 0 single bets (1-fold accumulator)
-// - 3 double bets (2-fold accumulator)
-// - 1 treble bets (3-fold accumulator)
-// - 7 4-fold accumulators
-// function cover(bets) {
-//   return (allSelections, returns, isEachWay) => {
-//     // Enforce minimum selections
-//     minimumSelections(bets.length)(allSelections, returns, isEachWay);
-//     // Calculate returns for each bet type
-//     for (let i = 0, order = 1; i < bets.length; i++, order++) {
-//       let count = bets[i];
-//       if (count < 1) {
-// 	continue;
-//       }
-//       let fn = combinationBet(order);
-//       console.log(count, 'bets of order', order);
-//       foreachCombination(allSelections, bets.length, (...selections) => {
-// 	fn(selections, returns, isEachWay);
-//       });
-//     }
-//   };
-// }
-
+// Calculate full cover bet
 function cover(n, withSingles = false) {
   return (allSelections, returns, isEachWay) => {
     minimumSelections(n)(allSelections, returns, isEachWay);
