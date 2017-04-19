@@ -211,7 +211,7 @@ function combinationBet(n) {
 
       // Calculate win returns
       if (selections.every(function (selection) {
-        return selection.outcome == 'win';
+        return selection.outcome == 'win' || selection.outcome == 'void';
       })) {
         returns.addBetReturn(selections.reduce(function (acc, selection) {
           return acc * (selection.winOdds + selection.rule4 - selection.winOdds * selection.rule4);
@@ -352,22 +352,37 @@ var Selection = exports.Selection = function Selection(outcome, winOdds) {
 
   _classCallCheck(this, Selection);
 
-  this.outcome = outcome; // one of 'win', 'place', 'lose'
-  this.winOdds = winOdds;
-  this.placeOdds = null;
-  this.rule4 = rule4;
+  this.outcome = outcome; // one of 'win', 'place', 'lose', 'void'
 
-  if (this.rule4 < 0 || this.rule4 > 0.90) {
-    throw new Error("Expected Rule 4 deduction to be in range 0 <= x <= 0.9");
-  }
+  switch (this.outcome) {
+    case 'win':
+    case 'place':
+      this.winOdds = winOdds;
+      this.rule4 = rule4;
 
-  if (this.outcome !== "lose") {
-    if (this.winOdds == null) {
-      throw new Error("Winning odds are required.");
-    }
+      if (this.winOdds == null) {
+        throw new Error("Winning odds are required.");
+      }
 
-    var decimalPlaceOddsRatio = parseFraction(placeOddsRatio);
-    this.placeOdds = 1 + (this.winOdds - 1) * decimalPlaceOddsRatio;
+      if (this.rule4 < 0 || this.rule4 > 0.90) {
+        throw new Error("Expected Rule 4 deduction to be in range 0 <= x <= 0.9");
+      }
+
+      var decimalPlaceOddsRatio = parseFraction(placeOddsRatio);
+      this.placeOdds = 1 + (this.winOdds - 1) * decimalPlaceOddsRatio;
+      break;
+
+    case 'void':
+      this.winOdds = 1;
+      this.placeOdds = 1;
+      this.rule4 = 0;
+      break;
+
+    case 'lose':
+      break;
+
+    default:
+      throw new Error('Unknown selection outcome ' + outcome);
   }
 };
 

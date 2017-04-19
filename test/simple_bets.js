@@ -44,7 +44,7 @@ describe('single bet', () => {
     returns.numberOfBets().should.equal(6);
     returns.totalProfit().should.equal(96);
     returns.totalReturn().should.equal(696);
-  })
+  });
 });
 
 describe('double bet', () => {
@@ -83,6 +83,21 @@ describe('double bet', () => {
     returns.numberOfBets().should.equal(6);
     returns.totalProfit().should.equal(-239);
     returns.totalReturn().should.equal(361);
+  });
+
+  it('handles void selections', () => {
+    const bet = new betlib.Bet('double', 100, true);
+    const returns = bet.settle([
+      new betlib.Selection('win', 2, {placeOddsRatio: '1/5'}),
+      new betlib.Selection('place', 2, {placeOddsRatio: '1/5'}),
+      new betlib.Selection('lose'),
+      new betlib.Selection('void'),
+    ]);
+
+    returns.totalStake().should.equal(1200);
+    returns.numberOfBets().should.equal(12);
+    returns.totalProfit().should.equal(-616);
+    returns.totalReturn().should.equal(584);
   });
 });
 

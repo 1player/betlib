@@ -3,6 +3,7 @@ A JS library to calculate popular UK bets
 # Todo
 
 - [x] Rule 4
+- [x] Void/Non-Runner
 - [ ] Dead Heat
 
 ## Simple bets

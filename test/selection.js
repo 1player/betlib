@@ -27,4 +27,21 @@ describe('selection', () => {
     placeSelection.winOdds.should.equal(expected.winOdds);
     placeSelection.placeOdds.should.equal(expected.placeOdds);
   });
+
+  it('sets void odds correctly', () => {
+    var selection = new betlib.Selection('void');
+
+    selection.winOdds.should.equal(1);
+    selection.placeOdds.should.equal(1);
+    selection.rule4.should.equal(0);
+
+    var selection = new betlib.Selection('void', 3, {
+      placeOddsRatio: '1/5', 
+      rule4: .35,
+    });
+
+    selection.winOdds.should.equal(1);
+    selection.placeOdds.should.equal(1);
+    selection.rule4.should.equal(0);
+  });
 });

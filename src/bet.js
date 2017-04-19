@@ -12,7 +12,7 @@ function combinationBet(n) {
 
     foreachCombination(allSelections, n, (...selections) => {
       // Calculate win returns
-      if (selections.every(selection => selection.outcome == 'win')) {
+      if (selections.every(selection => selection.outcome == 'win' || selection.outcome == 'void')) {
         returns.addBetReturn(selections.reduce(
           (acc, selection) => acc * (selection.winOdds + selection.rule4 - (selection.winOdds * selection.rule4)),
           returns.unitStake));
