@@ -8,8 +8,8 @@ describe('trixie bet', () => {
     const bet = new betlib.Bet('trixie', 100, false);
     expect(() => {
       bet.settle([
-	betlib.Selection.win('fractional', '9/2', '1/5'),
-	betlib.Selection.win('fractional', '9/2', '1/5'),
+        new betlib.Selection('win', 5.5),
+        new betlib.Selection('win', 5.5),
       ]);
     }).to.throw(betlib.InvalidSelectionCountError);
   });
@@ -17,14 +17,14 @@ describe('trixie bet', () => {
   it('each-way is calculated correctly', () => {
     const bet = new betlib.Bet('trixie', 100, true);
     const returns = bet.settle([
-      betlib.Selection.win('fractional', '9/2', '1/5'),
-      betlib.Selection.place('fractional', '9/2', '1/5'),
-      betlib.Selection.lose(),
-      betlib.Selection.win('fractional', '2/3', '1/5'),
-      betlib.Selection.win('fractional', '1/3', '1/5'),
-      betlib.Selection.lose(),
-      betlib.Selection.lose(),
-      betlib.Selection.place('fractional', '1/1', '1/5'),
+      new betlib.Selection('win', 5.5, {placeOddsRatio: '1/5'}),
+      new betlib.Selection('place', 5.5, {placeOddsRatio: '1/5'}),
+      new betlib.Selection('lose') ,
+      new betlib.Selection('win', 5/3, {placeOddsRatio: '1/5'}),
+      new betlib.Selection('win', 4/3, {placeOddsRatio: '1/5'}),
+      new betlib.Selection('lose') ,
+      new betlib.Selection('lose') ,
+      new betlib.Selection('place', 2, {placeOddsRatio: '1/5'}),
     ]);
 
     returns.numberOfBets().should.equal(448);
@@ -38,10 +38,10 @@ describe('yankee bet', () => {
   it('each-way is calculated correctly', () => {
     const bet = new betlib.Bet('yankee', 100, true);
     const returns = bet.settle([
-      betlib.Selection.win('fractional', '9/2', '1/5'),
-      betlib.Selection.place('fractional', '9/2', '1/5'),
-      betlib.Selection.win('fractional', '1/1', '1/5'),
-      betlib.Selection.lose(),
+      new betlib.Selection('win', 5.5, {placeOddsRatio: '1/5'}),
+      new betlib.Selection('place', 5.5, {placeOddsRatio: '1/5'}),
+      new betlib.Selection('win', 2, {placeOddsRatio: '1/5'}),
+      new betlib.Selection('lose') ,
     ]);
 
     returns.totalStake().should.equal(2200);
@@ -55,14 +55,14 @@ describe('patent bet', () => {
   it('each-way is calculated correctly', () => {
     const bet = new betlib.Bet('patent', 100, true);
     const returns = bet.settle([
-      betlib.Selection.win('fractional', '9/2', '1/5'),
-      betlib.Selection.place('fractional', '9/2', '1/5'),
-      betlib.Selection.lose(),
-      betlib.Selection.win('fractional', '2/3', '1/5'),
-      betlib.Selection.win('fractional', '1/3', '1/5'),
-      betlib.Selection.lose(),
-      betlib.Selection.lose(),
-      betlib.Selection.place('fractional', '1/1', '1/5'),
+      new betlib.Selection('win', 5.5, {placeOddsRatio: '1/5'}),
+      new betlib.Selection('place', 5.5, {placeOddsRatio: '1/5'}),
+      new betlib.Selection('lose') ,
+      new betlib.Selection('win', 5/3, {placeOddsRatio: '1/5'}),
+      new betlib.Selection('win', 4/3, {placeOddsRatio: '1/5'}),
+      new betlib.Selection('lose') ,
+      new betlib.Selection('lose') ,
+      new betlib.Selection('place', 2, {placeOddsRatio: '1/5'}),
     ]);
 
     returns.numberOfBets().should.equal(784);
@@ -76,14 +76,14 @@ describe('lucky 15 bet', () => {
   it('each-way is calculated correctly', () => {
     const bet = new betlib.Bet('lucky15', 100, true);
     const returns = bet.settle([
-      betlib.Selection.win('fractional', '9/2', '1/5'),
-      betlib.Selection.place('fractional', '9/2', '1/5'),
-      betlib.Selection.lose(),
-      betlib.Selection.win('fractional', '2/3', '1/5'),
-      betlib.Selection.win('fractional', '1/3', '1/5'),
-      betlib.Selection.lose(),
-      betlib.Selection.lose(),
-      betlib.Selection.place('fractional', '1/1', '1/5'),
+      new betlib.Selection('win', 5.5, {placeOddsRatio: '1/5'}),
+      new betlib.Selection('place', 5.5, {placeOddsRatio: '1/5'}),
+      new betlib.Selection('lose') ,
+      new betlib.Selection('win', 5/3, {placeOddsRatio: '1/5'}),
+      new betlib.Selection('win', 4/3, {placeOddsRatio: '1/5'}),
+      new betlib.Selection('lose') ,
+      new betlib.Selection('lose') ,
+      new betlib.Selection('place', 2, {placeOddsRatio: '1/5'}),
     ]);
 
     returns.numberOfBets().should.equal(2100);

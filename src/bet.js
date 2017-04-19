@@ -13,21 +13,21 @@ function combinationBet(n) {
     foreachCombination(allSelections, n, (...selections) => {
       // Calculate win returns
       if (selections.every(selection => selection.outcome == 'win')) {
-	returns.addBetReturn(selections.reduce(
-	  (acc, selection) => acc * selection.decimalWinOdds(),
-	  returns.unitStake));
+        returns.addBetReturn(selections.reduce(
+          (acc, selection) => acc * selection.winOdds,
+          returns.unitStake));
       } else {
-	returns.addBetReturn(0);
+        returns.addBetReturn(0);
       }
       // Calculate place returns, if this is a each-way bet
       if (isEachWay) {
-	if (selections.every(selection => selection.outcome != 'lose')) {
-	  returns.addBetReturn(selections.reduce(
-	    (acc, selection) => acc * selection.decimalPlaceOdds(),
-	    returns.unitStake));
-	} else {
-	  returns.addBetReturn(0);
-	}
+        if (selections.every(selection => selection.outcome != 'lose')) {
+          returns.addBetReturn(selections.reduce(
+            (acc, selection) => acc * selection.placeOdds,
+            returns.unitStake));
+        } else {
+          returns.addBetReturn(0);
+        }
       }
     });
   };
@@ -42,7 +42,7 @@ function cover(n, withSingles = false) {
 
     foreachCombination(allSelections, n, (...selections) => {
       for (let i = withSingles ? 1 : 2; i <= n; i++) {
-	combinationBet(i)(selections, returns, isEachWay);
+        combinationBet(i)(selections, returns, isEachWay);
       }
     });
   };
@@ -57,20 +57,20 @@ const BET_TYPES = {
   // accumulator is handled in `Bet` constructor
 
   // Full cover
-  trixie:     cover(3),
-  yankee:     cover(4),
-  canadian:   cover(5),
-  heinz:      cover(6),
+  trixie: cover(3),
+  yankee: cover(4),
+  canadian: cover(5),
+  heinz: cover(6),
   superHeinz: cover(7),
-  goliath:    cover(8),
+  goliath: cover(8),
 
   // Full cover with singles
-  patent:  cover(3, true),
+  patent: cover(3, true),
   lucky15: cover(4, true),
   lucky31: cover(5, true),
   lucky63: cover(6, true),
   // yap is a lucky 15 without any bonus applied, which we do not support anyway
-  yap:     cover(4, true),
+  yap: cover(4, true),
 };
 
 // Bet constructor
@@ -88,7 +88,7 @@ export class Bet {
       var pieces = type.split(":", 2);
       let foldSize = pieces.length === 1 ? 4 : parseInt(pieces[1]);
       if (isNaN(foldSize) || foldSize < 4) {
-	throw new Error("Invalid accumulator fold size.");
+        throw new Error("Invalid accumulator fold size.");
       }
       this.betFn = combinationBet(foldSize);
     } else {

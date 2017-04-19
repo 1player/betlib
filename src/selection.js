@@ -1,37 +1,22 @@
-import oddslib from 'oddslib';
+function parseFraction(v) {
+  let [num, denom] = v.split('/');
+  return parseInt(num) / parseInt(denom);
+}
 
 export class Selection {
-  constructor(outcome, winOdds, placeOddsRatio) {
+  constructor(outcome, winOdds, {placeOddsRatio = '1/1', rule4 = 0} = {}) {
     this.outcome = outcome; // one of 'win', 'place', 'lose'
+    this.winOdds = winOdds;
+    this.placeOdds = null;
+    this.rule4 = rule4;
 
     if (this.outcome !== "lose") {
-      this.winOdds = winOdds;
+      if (this.winOdds == null) {
+        throw new Error("Winning odds are required.");
+      }
 
-      const decimalWinOdds = this.winOdds.to('decimal');
-      const decimalPlaceOddsRatio = placeOddsRatio.to('decimal');
-      this.placeOdds = oddslib.from('decimal', 1 + (decimalWinOdds - 1) * (decimalPlaceOddsRatio - 1));
+      const decimalPlaceOddsRatio = parseFraction(placeOddsRatio);
+      this.placeOdds = 1 + (this.winOdds - 1) * decimalPlaceOddsRatio;
     }
-  }
-
-  // Static constructors
-  static win(oddsFormat, winOdds, placeOddsRatio = "1/1") {
-    return new Selection('win', oddslib.from(oddsFormat, winOdds), oddslib.from('fractional', placeOddsRatio));
-  }
-
-  static place(oddsFormat, winOdds, placeOddsRatio = "1/1") {
-    return new Selection('place', oddslib.from(oddsFormat, winOdds), oddslib.from('fractional', placeOddsRatio));
-  }
-
-  static lose() {
-    return new Selection('lose', null, null);
-  }
-
-
-  decimalWinOdds() {
-    return this.winOdds.to('decimal');
-  }
-
-  decimalPlaceOdds() {
-    return this.placeOdds.to('decimal');
   }
 }

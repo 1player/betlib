@@ -1,13 +1,13 @@
 // http://stackoverflow.com/a/35858868
-let makeError = function(name) {
+let makeError = function (name) {
   let cls = class {
     constructor(message) {
       this.name = name;
       this.message = message;
       if (typeof Error.captureStackTrace === 'function') {
-	Error.captureStackTrace(this, this.constructor);
+        Error.captureStackTrace(this, this.constructor);
       } else {
-	this.stack = (new Error(message)).stack;
+        this.stack = (new Error(message)).stack;
       }
     }
   };
