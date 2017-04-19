@@ -38,4 +38,13 @@ export class Selection {
         throw new Error(`Unknown selection outcome ${outcome}`);
     }
   }
+
+  // Return for this selection with a stake of 1 and the specified odds
+  unitReturns(odds) {
+    if (this.outcome === 'lose') {
+      throw new Error("BUG: calculating returns on a lost selection");
+    }
+
+    return ((odds - 1) * (1 - this.rule4)) + 1;
+  }
 }

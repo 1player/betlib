@@ -214,7 +214,7 @@ function combinationBet(n) {
         return selection.outcome == 'win' || selection.outcome == 'void';
       })) {
         returns.addBetReturn(selections.reduce(function (acc, selection) {
-          return acc * (selection.winOdds + selection.rule4 - selection.winOdds * selection.rule4);
+          return acc * selection.unitReturns(selection.winOdds);
         }, returns.unitStake));
       } else {
         returns.addBetReturn(0);
@@ -225,7 +225,7 @@ function combinationBet(n) {
           return selection.outcome != 'lose';
         })) {
           returns.addBetReturn(selections.reduce(function (acc, selection) {
-            return acc * (selection.placeOdds + selection.rule4 - selection.placeOdds * selection.rule4);
+            return acc * selection.unitReturns(selection.placeOdds);
           }, returns.unitStake));
         } else {
           returns.addBetReturn(0);
@@ -330,6 +330,8 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
 var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -343,48 +345,66 @@ function parseFraction(v) {
   return parseInt(num) / parseInt(denom);
 }
 
-var Selection = exports.Selection = function Selection(outcome, winOdds) {
-  var _ref = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {},
-      _ref$placeOddsRatio = _ref.placeOddsRatio,
-      placeOddsRatio = _ref$placeOddsRatio === undefined ? '1/1' : _ref$placeOddsRatio,
-      _ref$rule = _ref.rule4,
-      rule4 = _ref$rule === undefined ? 0 : _ref$rule;
+var Selection = exports.Selection = function () {
+  function Selection(outcome, winOdds) {
+    var _ref = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {},
+        _ref$placeOddsRatio = _ref.placeOddsRatio,
+        placeOddsRatio = _ref$placeOddsRatio === undefined ? '1/1' : _ref$placeOddsRatio,
+        _ref$rule = _ref.rule4,
+        rule4 = _ref$rule === undefined ? 0 : _ref$rule;
 
-  _classCallCheck(this, Selection);
+    _classCallCheck(this, Selection);
 
-  this.outcome = outcome; // one of 'win', 'place', 'lose', 'void'
+    this.outcome = outcome; // one of 'win', 'place', 'lose', 'void'
 
-  switch (this.outcome) {
-    case 'win':
-    case 'place':
-      this.winOdds = winOdds;
-      this.rule4 = rule4;
+    switch (this.outcome) {
+      case 'win':
+      case 'place':
+        this.winOdds = winOdds;
+        this.rule4 = rule4;
 
-      if (this.winOdds == null) {
-        throw new Error("Winning odds are required.");
-      }
+        if (this.winOdds == null) {
+          throw new Error("Winning odds are required.");
+        }
 
-      if (this.rule4 < 0 || this.rule4 > 0.90) {
-        throw new Error("Expected Rule 4 deduction to be in range 0 <= x <= 0.9");
-      }
+        if (this.rule4 < 0 || this.rule4 > 0.90) {
+          throw new Error("Expected Rule 4 deduction to be in range 0 <= x <= 0.9");
+        }
 
-      var decimalPlaceOddsRatio = parseFraction(placeOddsRatio);
-      this.placeOdds = 1 + (this.winOdds - 1) * decimalPlaceOddsRatio;
-      break;
+        var decimalPlaceOddsRatio = parseFraction(placeOddsRatio);
+        this.placeOdds = 1 + (this.winOdds - 1) * decimalPlaceOddsRatio;
+        break;
 
-    case 'void':
-      this.winOdds = 1;
-      this.placeOdds = 1;
-      this.rule4 = 0;
-      break;
+      case 'void':
+        this.winOdds = 1;
+        this.placeOdds = 1;
+        this.rule4 = 0;
+        break;
 
-    case 'lose':
-      break;
+      case 'lose':
+        break;
 
-    default:
-      throw new Error('Unknown selection outcome ' + outcome);
+      default:
+        throw new Error('Unknown selection outcome ' + outcome);
+    }
   }
-};
+
+  // Return for this selection with a stake of 1 and the specified odds
+
+
+  _createClass(Selection, [{
+    key: 'unitReturns',
+    value: function unitReturns(odds) {
+      if (this.outcome === 'lose') {
+        throw new Error("BUG: calculating returns on a lost selection");
+      }
+
+      return (odds - 1) * (1 - this.rule4) + 1;
+    }
+  }]);
+
+  return Selection;
+}();
 
 /***/ }),
 /* 4 */
