@@ -31,6 +31,20 @@ describe('single bet', () => {
     returns.totalProfit().should.equal(330);
     returns.totalReturn().should.equal(930);
   });
+
+  it('applies rule4 correctly', () => {
+    const bet = new betlib.Bet('single', 100, true);
+    const returns = bet.settle([
+      new betlib.Selection('win', 5.5, {placeOddsRatio: '1/5', rule4: 0.35}),
+      new betlib.Selection('place', 5.5, {placeOddsRatio: '1/5', rule4: 0.50}),
+      new betlib.Selection('lose'),
+    ]);
+
+    returns.totalStake().should.equal(600);
+    returns.numberOfBets().should.equal(6);
+    returns.totalProfit().should.equal(96);
+    returns.totalReturn().should.equal(696);
+  })
 });
 
 describe('double bet', () => {

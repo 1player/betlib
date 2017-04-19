@@ -10,6 +10,10 @@ export class Selection {
     this.placeOdds = null;
     this.rule4 = rule4;
 
+    if (this.rule4 < 0 || this.rule4 > 0.90) {
+      throw new Error("Expected Rule 4 deduction to be in range 0 <= x <= 0.9")
+    }
+
     if (this.outcome !== "lose") {
       if (this.winOdds == null) {
         throw new Error("Winning odds are required.");

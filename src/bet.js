@@ -14,7 +14,7 @@ function combinationBet(n) {
       // Calculate win returns
       if (selections.every(selection => selection.outcome == 'win')) {
         returns.addBetReturn(selections.reduce(
-          (acc, selection) => acc * selection.winOdds,
+          (acc, selection) => acc * (selection.winOdds + selection.rule4 - (selection.winOdds * selection.rule4)),
           returns.unitStake));
       } else {
         returns.addBetReturn(0);
@@ -23,7 +23,7 @@ function combinationBet(n) {
       if (isEachWay) {
         if (selections.every(selection => selection.outcome != 'lose')) {
           returns.addBetReturn(selections.reduce(
-            (acc, selection) => acc * selection.placeOdds,
+            (acc, selection) => acc * (selection.placeOdds + selection.rule4 - (selection.placeOdds * selection.rule4)),
             returns.unitStake));
         } else {
           returns.addBetReturn(0);

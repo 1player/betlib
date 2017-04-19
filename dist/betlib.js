@@ -214,7 +214,7 @@ function combinationBet(n) {
         return selection.outcome == 'win';
       })) {
         returns.addBetReturn(selections.reduce(function (acc, selection) {
-          return acc * selection.winOdds;
+          return acc * (selection.winOdds + selection.rule4 - selection.winOdds * selection.rule4);
         }, returns.unitStake));
       } else {
         returns.addBetReturn(0);
@@ -225,7 +225,7 @@ function combinationBet(n) {
           return selection.outcome != 'lose';
         })) {
           returns.addBetReturn(selections.reduce(function (acc, selection) {
-            return acc * selection.placeOdds;
+            return acc * (selection.placeOdds + selection.rule4 - selection.placeOdds * selection.rule4);
           }, returns.unitStake));
         } else {
           returns.addBetReturn(0);
@@ -356,6 +356,10 @@ var Selection = exports.Selection = function Selection(outcome, winOdds) {
   this.winOdds = winOdds;
   this.placeOdds = null;
   this.rule4 = rule4;
+
+  if (this.rule4 < 0 || this.rule4 > 0.90) {
+    throw new Error("Expected Rule 4 deduction to be in range 0 <= x <= 0.9");
+  }
 
   if (this.outcome !== "lose") {
     if (this.winOdds == null) {
