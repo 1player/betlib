@@ -211,7 +211,7 @@ function combinationBet(n) {
 
       // Calculate win returns
       if (selections.every(function (selection) {
-        return selection.validInWinMarket();
+        return selection.appliesToWinMarket();
       })) {
         returns.addBetReturn(selections.reduce(function (acc, selection) {
           return acc * selection.winMarketReturns();
@@ -222,7 +222,7 @@ function combinationBet(n) {
       // Calculate place returns, if this is a each-way bet
       if (isEachWay) {
         if (selections.every(function (selection) {
-          return selection.outcome != 'lose';
+          return selection.appliesToPlaceMarket();
         })) {
           returns.addBetReturn(selections.reduce(function (acc, selection) {
             return acc * selection.placeMarketReturns();
@@ -330,129 +330,265 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-function parseFraction(v) {
-  var _v$split = v.split('/'),
-      _v$split2 = _slicedToArray(_v$split, 2),
-      num = _v$split2[0],
-      denom = _v$split2[1];
-
-  return parseInt(num) / parseInt(denom);
-}
-
-var Selection = exports.Selection = function () {
-  function Selection(outcome, winOdds) {
-    var _ref = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {},
-        _ref$placeOddsRatio = _ref.placeOddsRatio,
-        placeOddsRatio = _ref$placeOddsRatio === undefined ? '1/1' : _ref$placeOddsRatio,
-        _ref$rule = _ref.rule4,
-        rule4 = _ref$rule === undefined ? 0 : _ref$rule,
-        _ref$placesOffered = _ref.placesOffered,
-        placesOffered = _ref$placesOffered === undefined ? null : _ref$placesOffered,
-        _ref$tiedPosition = _ref.tiedPosition,
-        tiedPosition = _ref$tiedPosition === undefined ? null : _ref$tiedPosition,
-        _ref$runnersInDeadHea = _ref.runnersInDeadHeat,
-        runnersInDeadHeat = _ref$runnersInDeadHea === undefined ? null : _ref$runnersInDeadHea;
-
+var Selection = function () {
+  function Selection() {
     _classCallCheck(this, Selection);
-
-    this.outcome = outcome; // one of 'win', 'place', 'lose', 'void'
-
-    switch (this.outcome) {
-      case 'deadheat':
-        this.placesOffered = placesOffered;
-        this.tiedPosition = tiedPosition;
-        this.runnersInDeadHeat = runnersInDeadHeat;
-      // fallthrough
-      case 'win':
-      case 'place':
-        this.winOdds = winOdds;
-        this.rule4 = rule4;
-
-        if (this.winOdds == null) {
-          throw new Error("Winning odds are required.");
-        }
-
-        if (this.rule4 < 0 || this.rule4 > 0.90) {
-          throw new Error("Expected Rule 4 deduction to be in range 0 <= x <= 0.9");
-        }
-
-        var decimalPlaceOddsRatio = parseFraction(placeOddsRatio);
-        this.placeOdds = 1 + (this.winOdds - 1) * decimalPlaceOddsRatio;
-        break;
-
-      case 'void':
-        this.winOdds = 1;
-        this.placeOdds = 1;
-        this.rule4 = 0;
-        break;
-
-      case 'lose':
-        break;
-
-      default:
-        throw new Error('Unknown selection outcome ' + outcome);
-    }
   }
 
   _createClass(Selection, [{
-    key: 'validInWinMarket',
-    value: function validInWinMarket() {
-      return this.outcome === 'win' || this.outcome === 'void' || this.outcome === 'deadheat' && this.tiedPosition == 1;
+    key: 'appliesToWinMarket',
+    value: function appliesToWinMarket() {
+      throw new Error('BUG: unimplemented');
     }
   }, {
-    key: 'validInPlaceMarket',
-    value: function validInPlaceMarket() {
-      return this.outcome !== 'lose';
+    key: 'appliesToPlaceMarket',
+    value: function appliesToPlaceMarket() {
+      throw new Error('BUG: unimplemented');
     }
-
-    // Returns on the win market with a stake of 1
-
   }, {
     key: 'winMarketReturns',
     value: function winMarketReturns() {
-      if (this.outcome === 'lose') {
-        throw new Error("BUG: calculating returns on a lost selection");
-      }
-
-      var returns = (this.winOdds - 1) * (1 - this.rule4) + 1;
-
-      if (this.outcome === 'deadheat') {
-        returns /= this.runnersInDeadHeat;
-      }
-
-      return returns;
+      throw new Error('BUG: unimplemented');
     }
-
-    // Returns on the place market with a stake of 1
-
   }, {
     key: 'placeMarketReturns',
     value: function placeMarketReturns() {
-      if (this.outcome === 'lose') {
-        throw new Error("BUG: calculating returns on a lost selection");
-      }
+      throw new Error('BUG: unimplemented');
+    }
 
-      var returns = (this.placeOdds - 1) * (1 - this.rule4) + 1;
+    // Returns on a stake of 1
 
-      if (this.outcome === 'deadheat') {
-        var sharedPayingPlaces = this.placesOffered - this.tiedPosition + 1;
-        if (sharedPayingPlaces < this.runnersInDeadHeat) {
-          returns *= sharedPayingPlaces / this.runnersInDeadHeat;
-        }
+  }, {
+    key: 'unitReturns',
+    value: function unitReturns(odds) {
+      return (odds - 1) * (1 - this.rule4) + 1;
+    }
+  }]);
+
+  return Selection;
+}();
+
+var WinSelection = exports.WinSelection = function (_Selection) {
+  _inherits(WinSelection, _Selection);
+
+  function WinSelection(_ref) {
+    var winOdds = _ref.winOdds,
+        _ref$placeOddsFractio = _ref.placeOddsFraction,
+        placeOddsFraction = _ref$placeOddsFractio === undefined ? '1/1' : _ref$placeOddsFractio,
+        _ref$rule = _ref.rule4,
+        rule4 = _ref$rule === undefined ? 0 : _ref$rule;
+
+    _classCallCheck(this, WinSelection);
+
+    var _this = _possibleConstructorReturn(this, (WinSelection.__proto__ || Object.getPrototypeOf(WinSelection)).call(this));
+
+    _this.winOdds = winOdds;
+    _this.rule4 = rule4;
+
+    var _placeOddsFraction$sp = placeOddsFraction.split('/'),
+        _placeOddsFraction$sp2 = _slicedToArray(_placeOddsFraction$sp, 2),
+        num = _placeOddsFraction$sp2[0],
+        denom = _placeOddsFraction$sp2[1];
+
+    var decimalPlaceOddsFraction = parseInt(num) / parseInt(denom);
+    _this.placeOdds = 1 + (_this.winOdds - 1) * decimalPlaceOddsFraction;
+
+    if (_this.rule4 < 0 || _this.rule4 > 0.90) {
+      throw new Error("Expected Rule 4 deduction to be in range 0 <= x <= 0.9");
+    }
+    return _this;
+  }
+
+  _createClass(WinSelection, [{
+    key: 'appliesToWinMarket',
+    value: function appliesToWinMarket() {
+      return true;
+    }
+  }, {
+    key: 'appliesToPlaceMarket',
+    value: function appliesToPlaceMarket() {
+      return true;
+    }
+  }, {
+    key: 'winMarketReturns',
+    value: function winMarketReturns() {
+      return this.unitReturns(this.winOdds);
+    }
+  }, {
+    key: 'placeMarketReturns',
+    value: function placeMarketReturns() {
+      return this.unitReturns(this.placeOdds);
+    }
+  }]);
+
+  return WinSelection;
+}(Selection);
+
+var PlaceSelection = exports.PlaceSelection = function (_WinSelection) {
+  _inherits(PlaceSelection, _WinSelection);
+
+  function PlaceSelection() {
+    _classCallCheck(this, PlaceSelection);
+
+    return _possibleConstructorReturn(this, (PlaceSelection.__proto__ || Object.getPrototypeOf(PlaceSelection)).apply(this, arguments));
+  }
+
+  _createClass(PlaceSelection, [{
+    key: 'appliesToWinMarket',
+    value: function appliesToWinMarket() {
+      return false;
+    }
+  }, {
+    key: 'appliesToPlaceMarket',
+    value: function appliesToPlaceMarket() {
+      return true;
+    }
+  }, {
+    key: 'winMarketReturns',
+    value: function winMarketReturns() {
+      throw new Error('BUG: place selection does not apply to win markets');
+    }
+  }, {
+    key: 'placeMarketReturns',
+    value: function placeMarketReturns() {
+      return this.unitReturns(this.placeOdds);
+    }
+  }]);
+
+  return PlaceSelection;
+}(WinSelection);
+
+var LoseSelection = exports.LoseSelection = function (_Selection2) {
+  _inherits(LoseSelection, _Selection2);
+
+  function LoseSelection() {
+    _classCallCheck(this, LoseSelection);
+
+    return _possibleConstructorReturn(this, (LoseSelection.__proto__ || Object.getPrototypeOf(LoseSelection)).apply(this, arguments));
+  }
+
+  _createClass(LoseSelection, [{
+    key: 'appliesToWinMarket',
+    value: function appliesToWinMarket() {
+      return false;
+    }
+  }, {
+    key: 'appliesToPlaceMarket',
+    value: function appliesToPlaceMarket() {
+      return false;
+    }
+  }, {
+    key: 'winMarketReturns',
+    value: function winMarketReturns() {
+      throw new Error('BUG: lose selection does not apply to any market');
+    }
+  }, {
+    key: 'placeMarketReturns',
+    value: function placeMarketReturns() {
+      throw new Error('BUG: lose selection does not apply to any market');
+    }
+  }]);
+
+  return LoseSelection;
+}(Selection);
+
+var VoidSelection = exports.VoidSelection = function (_Selection3) {
+  _inherits(VoidSelection, _Selection3);
+
+  function VoidSelection() {
+    _classCallCheck(this, VoidSelection);
+
+    return _possibleConstructorReturn(this, (VoidSelection.__proto__ || Object.getPrototypeOf(VoidSelection)).apply(this, arguments));
+  }
+
+  _createClass(VoidSelection, [{
+    key: 'appliesToWinMarket',
+    value: function appliesToWinMarket() {
+      return true;
+    }
+  }, {
+    key: 'appliesToPlaceMarket',
+    value: function appliesToPlaceMarket() {
+      return true;
+    }
+  }, {
+    key: 'winMarketReturns',
+    value: function winMarketReturns() {
+      return 1;
+    }
+  }, {
+    key: 'placeMarketReturns',
+    value: function placeMarketReturns() {
+      return 1;
+    }
+  }]);
+
+  return VoidSelection;
+}(Selection);
+
+var DeadHeatSelection = exports.DeadHeatSelection = function (_WinSelection2) {
+  _inherits(DeadHeatSelection, _WinSelection2);
+
+  function DeadHeatSelection(_ref2) {
+    var tiedPosition = _ref2.tiedPosition,
+        placesOffered = _ref2.placesOffered,
+        runnersInDeadHeat = _ref2.runnersInDeadHeat,
+        winOdds = _ref2.winOdds,
+        _ref2$placeOddsFracti = _ref2.placeOddsFraction,
+        placeOddsFraction = _ref2$placeOddsFracti === undefined ? '1/1' : _ref2$placeOddsFracti,
+        _ref2$rule = _ref2.rule4,
+        rule4 = _ref2$rule === undefined ? 0 : _ref2$rule;
+
+    _classCallCheck(this, DeadHeatSelection);
+
+    var _this5 = _possibleConstructorReturn(this, (DeadHeatSelection.__proto__ || Object.getPrototypeOf(DeadHeatSelection)).call(this, { winOdds: winOdds, placeOddsFraction: placeOddsFraction, rule4: rule4 }));
+
+    _this5.tiedPosition = tiedPosition;
+    _this5.placesOffered = placesOffered;
+    _this5.runnersInDeadHeat = runnersInDeadHeat;
+    return _this5;
+  }
+
+  _createClass(DeadHeatSelection, [{
+    key: 'appliesToWinMarket',
+    value: function appliesToWinMarket() {
+      return this.tiedPosition === 1;
+    }
+  }, {
+    key: 'appliesToPlaceMarket',
+    value: function appliesToPlaceMarket() {
+      return true;
+    }
+  }, {
+    key: 'winMarketReturns',
+    value: function winMarketReturns() {
+      return this.unitReturns(this.winOdds) / this.runnersInDeadHeat;
+    }
+  }, {
+    key: 'placeMarketReturns',
+    value: function placeMarketReturns() {
+      var returns = this.unitReturns(this.placeOdds);
+      var sharedPayingPlaces = this.placesOffered - this.tiedPosition + 1;
+      if (sharedPayingPlaces < this.runnersInDeadHeat) {
+        returns *= sharedPayingPlaces / this.runnersInDeadHeat;
       }
 
       return returns;
     }
   }]);
 
-  return Selection;
-}();
+  return DeadHeatSelection;
+}(WinSelection);
 
 /***/ }),
 /* 4 */
@@ -550,11 +686,14 @@ Object.defineProperty(exports, 'Returns', {
 
 var _selection = __webpack_require__(3);
 
-Object.defineProperty(exports, 'Selection', {
-  enumerable: true,
-  get: function get() {
-    return _selection.Selection;
-  }
+Object.keys(_selection).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function get() {
+      return _selection[key];
+    }
+  });
 });
 
 var _bet = __webpack_require__(2);

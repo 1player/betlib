@@ -12,7 +12,7 @@ function combinationBet(n) {
 
     foreachCombination(allSelections, n, (...selections) => {
       // Calculate win returns
-      if (selections.every(selection => selection.validInWinMarket())) {
+      if (selections.every(selection => selection.appliesToWinMarket())) {
         returns.addBetReturn(selections.reduce(
           (acc, selection) => acc * selection.winMarketReturns(),
           returns.unitStake));
@@ -21,7 +21,7 @@ function combinationBet(n) {
       }
       // Calculate place returns, if this is a each-way bet
       if (isEachWay) {
-        if (selections.every(selection => selection.outcome != 'lose')) {
+        if (selections.every(selection => selection.appliesToPlaceMarket())) {
           returns.addBetReturn(selections.reduce(
             (acc, selection) => acc * selection.placeMarketReturns(),
             returns.unitStake));

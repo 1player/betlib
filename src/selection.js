@@ -1,92 +1,97 @@
-function parseFraction(v) {
-  let [num, denom] = v.split('/');
-  return parseInt(num) / parseInt(denom);
+class Selection {
+  constructor() {}
+
+  appliesToWinMarket() {
+    throw new Error('BUG: unimplemented');
+  }
+  appliesToPlaceMarket() {
+    throw new Error('BUG: unimplemented');
+  }
+  winMarketReturns() {
+    throw new Error('BUG: unimplemented');
+  }
+  placeMarketReturns() {
+    throw new Error('BUG: unimplemented');
+  }
+
+  // Returns on a stake of 1
+  unitReturns(odds) {
+    return ((odds - 1) * (1 - this.rule4)) + 1;
+  }
 }
 
-export class Selection {
-  constructor(outcome, winOdds, {
-    placeOddsRatio = '1/1', 
-    rule4 = 0, 
-    placesOffered = null, 
-    tiedPosition = null,
-    runnersInDeadHeat = null,
-  } = {}) {
-    this.outcome = outcome; // one of 'win', 'place', 'lose', 'void'
+export class WinSelection extends Selection {
+  constructor({winOdds, placeOddsFraction = '1/1', rule4 = 0}) {
+    super();
 
-    switch (this.outcome) {
-      case 'deadheat':
-        this.placesOffered = placesOffered;
-        this.tiedPosition = tiedPosition;
-        this.runnersInDeadHeat = runnersInDeadHeat;
-        // fallthrough
-      case 'win':
-      case 'place':
-        this.winOdds = winOdds;
-        this.rule4 = rule4;
+    this.winOdds = winOdds;
+    this.rule4 = rule4;
 
-        if (this.winOdds == null) {
-          throw new Error("Winning odds are required.");
-        }
+    let [num, denom] = placeOddsFraction.split('/');
+    const decimalPlaceOddsFraction = parseInt(num) / parseInt(denom);
+    this.placeOdds = 1 + (this.winOdds - 1) * decimalPlaceOddsFraction;
 
-        if (this.rule4 < 0 || this.rule4 > 0.90) {
-          throw new Error("Expected Rule 4 deduction to be in range 0 <= x <= 0.9")
-        }
-
-        const decimalPlaceOddsRatio = parseFraction(placeOddsRatio);
-        this.placeOdds = 1 + (this.winOdds - 1) * decimalPlaceOddsRatio;
-        break;
-
-
-      case 'void':
-        this.winOdds = 1;
-        this.placeOdds = 1;
-        this.rule4 = 0;
-        break;
-
-      case 'lose':
-        break;
-
-      default:
-        throw new Error(`Unknown selection outcome ${outcome}`);
+    if (this.rule4 < 0 || this.rule4 > 0.90) {
+      throw new Error("Expected Rule 4 deduction to be in range 0 <= x <= 0.9")
     }
   }
 
-  validInWinMarket() {
-    return this.outcome === 'win' || this.outcome === 'void' || (this.outcome === 'deadheat' && this.tiedPosition == 1);
-  }
+  appliesToWinMarket() { return true; }
+  appliesToPlaceMarket() { return true; }
 
-  validInPlaceMarket() {
-    return this.outcome !== 'lose';
-  }
-
-  // Returns on the win market with a stake of 1
   winMarketReturns() {
-    if (this.outcome === 'lose') {
-      throw new Error("BUG: calculating returns on a lost selection");
-    }
-
-    let returns = ((this.winOdds - 1) * (1 - this.rule4)) + 1;
-
-    if (this.outcome === 'deadheat') {
-      returns /= this.runnersInDeadHeat;
-    }
-
-    return returns;
+    return this.unitReturns(this.winOdds);
   }
-
-  // Returns on the place market with a stake of 1
   placeMarketReturns() {
-    if (this.outcome === 'lose') {
-      throw new Error("BUG: calculating returns on a lost selection");
-    }
+    return this.unitReturns(this.placeOdds);
+  }
+}
 
-    let returns = ((this.placeOdds - 1) * (1 - this.rule4)) + 1;
+export class PlaceSelection extends WinSelection {
+  appliesToWinMarket() { return false; }
+  appliesToPlaceMarket() { return true; }
 
-    if (this.outcome === 'deadheat') {
-      let sharedPayingPlaces = this.placesOffered - this.tiedPosition + 1;
-      if (sharedPayingPlaces < this.runnersInDeadHeat) {
-        returns *= sharedPayingPlaces / this.runnersInDeadHeat;
-      }
+  winMarketReturns() {
+    throw new Error('BUG: place selection does not apply to win markets');
+  }
+  placeMarketReturns() {
+    return this.unitReturns(this.placeOdds);
+  }
+}
+
+export class LoseSelection extends Selection {
+  appliesToWinMarket() { return false; }
+  appliesToPlaceMarket() { return false; }
+  winMarketReturns() { throw new Error('BUG: lose selection does not apply to any market'); }
+  placeMarketReturns() { throw new Error('BUG: lose selection does not apply to any market'); }
+}
+
+export class VoidSelection extends Selection {
+  appliesToWinMarket() { return true; }
+  appliesToPlaceMarket() { return true; }
+
+  winMarketReturns() { return 1; }
+  placeMarketReturns() { return 1; }
+}
+
+export class DeadHeatSelection extends WinSelection {
+  constructor({tiedPosition, placesOffered, runnersInDeadHeat, winOdds, placeOddsFraction = '1/1', rule4 = 0}) {
+    super({winOdds, placeOddsFraction, rule4});
+    this.tiedPosition = tiedPosition;
+    this.placesOffered = placesOffered;
+    this.runnersInDeadHeat = runnersInDeadHeat;
+  }
+  appliesToWinMarket() { return this.tiedPosition === 1; }
+  appliesToPlaceMarket() { return true; }
+
+  winMarketReturns() { 
+    return this.unitReturns(this.winOdds) / this.runnersInDeadHeat;
+  }
+  placeMarketReturns() { 
+    let returns = this.unitReturns(this.placeOdds);
+    let sharedPayingPlaces = this.placesOffered - this.tiedPosition + 1;
+    if (sharedPayingPlaces < this.runnersInDeadHeat) {
+      returns *= sharedPayingPlaces / this.runnersInDeadHeat;
     }
 
     return returns;
