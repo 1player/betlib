@@ -45,6 +45,61 @@ describe('single bet', () => {
     returns.totalProfit().should.equal(96);
     returns.totalReturn().should.equal(696);
   });
+
+  it('handles each-way dead heat correctly', () => {
+    const bet = new betlib.Bet('single', 10, true);
+    let returns = bet.settle([
+      new betlib.Selection('deadheat', 9, {
+        placeOddsRatio: '1/4', 
+        placesOffered: 5, 
+        tiedPosition: 2,
+        runnersInDeadHeat: 4,
+      }),
+    ]);
+
+    returns.totalStake().should.equal(20);
+    returns.numberOfBets().should.equal(2);
+    returns.totalReturn().should.equal(30);
+
+    returns = bet.settle([
+      new betlib.Selection('deadheat', 9, {
+        placeOddsRatio: '1/4', 
+        placesOffered: 4, 
+        tiedPosition: 3,
+        runnersInDeadHeat: 3,
+      }),
+    ]);
+
+    returns.totalStake().should.equal(20);
+    returns.numberOfBets().should.equal(2);
+    returns.totalReturn().should.equal(20);
+
+    returns = bet.settle([
+      new betlib.Selection('deadheat', 9, {
+        placeOddsRatio: '1/4', 
+        placesOffered: 5, 
+        tiedPosition: 2,
+        runnersInDeadHeat: 3,
+      }),
+    ]);
+
+    returns.totalStake().should.equal(20);
+    returns.numberOfBets().should.equal(2);
+    returns.totalReturn().should.equal(30);
+
+    returns = bet.settle([
+      new betlib.Selection('deadheat', 9, {
+        placeOddsRatio: '1/4', 
+        placesOffered: 3, 
+        tiedPosition: 1,
+        runnersInDeadHeat: 4,
+      }),
+    ]);
+
+    returns.totalStake().should.equal(20);
+    returns.numberOfBets().should.equal(2);
+    returns.totalReturn().should.equal(45);
+  })
 });
 
 describe('double bet', () => {

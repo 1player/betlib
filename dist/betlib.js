@@ -211,10 +211,10 @@ function combinationBet(n) {
 
       // Calculate win returns
       if (selections.every(function (selection) {
-        return selection.outcome == 'win' || selection.outcome == 'void';
+        return selection.validInWinMarket();
       })) {
         returns.addBetReturn(selections.reduce(function (acc, selection) {
-          return acc * selection.unitReturns(selection.winOdds);
+          return acc * selection.winMarketReturns();
         }, returns.unitStake));
       } else {
         returns.addBetReturn(0);
@@ -225,7 +225,7 @@ function combinationBet(n) {
           return selection.outcome != 'lose';
         })) {
           returns.addBetReturn(selections.reduce(function (acc, selection) {
-            return acc * selection.unitReturns(selection.placeOdds);
+            return acc * selection.placeMarketReturns();
           }, returns.unitStake));
         } else {
           returns.addBetReturn(0);
@@ -351,13 +351,24 @@ var Selection = exports.Selection = function () {
         _ref$placeOddsRatio = _ref.placeOddsRatio,
         placeOddsRatio = _ref$placeOddsRatio === undefined ? '1/1' : _ref$placeOddsRatio,
         _ref$rule = _ref.rule4,
-        rule4 = _ref$rule === undefined ? 0 : _ref$rule;
+        rule4 = _ref$rule === undefined ? 0 : _ref$rule,
+        _ref$placesOffered = _ref.placesOffered,
+        placesOffered = _ref$placesOffered === undefined ? null : _ref$placesOffered,
+        _ref$tiedPosition = _ref.tiedPosition,
+        tiedPosition = _ref$tiedPosition === undefined ? null : _ref$tiedPosition,
+        _ref$runnersInDeadHea = _ref.runnersInDeadHeat,
+        runnersInDeadHeat = _ref$runnersInDeadHea === undefined ? null : _ref$runnersInDeadHea;
 
     _classCallCheck(this, Selection);
 
     this.outcome = outcome; // one of 'win', 'place', 'lose', 'void'
 
     switch (this.outcome) {
+      case 'deadheat':
+        this.placesOffered = placesOffered;
+        this.tiedPosition = tiedPosition;
+        this.runnersInDeadHeat = runnersInDeadHeat;
+      // fallthrough
       case 'win':
       case 'place':
         this.winOdds = winOdds;
@@ -389,17 +400,54 @@ var Selection = exports.Selection = function () {
     }
   }
 
-  // Return for this selection with a stake of 1 and the specified odds
-
-
   _createClass(Selection, [{
-    key: 'unitReturns',
-    value: function unitReturns(odds) {
+    key: 'validInWinMarket',
+    value: function validInWinMarket() {
+      return this.outcome === 'win' || this.outcome === 'void' || this.outcome === 'deadheat' && this.tiedPosition == 1;
+    }
+  }, {
+    key: 'validInPlaceMarket',
+    value: function validInPlaceMarket() {
+      return this.outcome !== 'lose';
+    }
+
+    // Returns on the win market with a stake of 1
+
+  }, {
+    key: 'winMarketReturns',
+    value: function winMarketReturns() {
       if (this.outcome === 'lose') {
         throw new Error("BUG: calculating returns on a lost selection");
       }
 
-      return (odds - 1) * (1 - this.rule4) + 1;
+      var returns = (this.winOdds - 1) * (1 - this.rule4) + 1;
+
+      if (this.outcome === 'deadheat') {
+        returns /= this.runnersInDeadHeat;
+      }
+
+      return returns;
+    }
+
+    // Returns on the place market with a stake of 1
+
+  }, {
+    key: 'placeMarketReturns',
+    value: function placeMarketReturns() {
+      if (this.outcome === 'lose') {
+        throw new Error("BUG: calculating returns on a lost selection");
+      }
+
+      var returns = (this.placeOdds - 1) * (1 - this.rule4) + 1;
+
+      if (this.outcome === 'deadheat') {
+        var sharedPayingPlaces = this.placesOffered - this.tiedPosition + 1;
+        if (sharedPayingPlaces < this.runnersInDeadHeat) {
+          returns *= sharedPayingPlaces / this.runnersInDeadHeat;
+        }
+      }
+
+      return returns;
     }
   }]);
 

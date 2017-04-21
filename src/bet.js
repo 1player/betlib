@@ -12,9 +12,9 @@ function combinationBet(n) {
 
     foreachCombination(allSelections, n, (...selections) => {
       // Calculate win returns
-      if (selections.every(selection => selection.outcome == 'win' || selection.outcome == 'void')) {
+      if (selections.every(selection => selection.validInWinMarket())) {
         returns.addBetReturn(selections.reduce(
-          (acc, selection) => acc * selection.unitReturns(selection.winOdds),
+          (acc, selection) => acc * selection.winMarketReturns(),
           returns.unitStake));
       } else {
         returns.addBetReturn(0);
@@ -23,7 +23,7 @@ function combinationBet(n) {
       if (isEachWay) {
         if (selections.every(selection => selection.outcome != 'lose')) {
           returns.addBetReturn(selections.reduce(
-            (acc, selection) => acc * selection.unitReturns(selection.placeOdds),
+            (acc, selection) => acc * selection.placeMarketReturns(),
             returns.unitStake));
         } else {
           returns.addBetReturn(0);

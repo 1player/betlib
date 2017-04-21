@@ -4,7 +4,7 @@ A JS library to calculate popular UK bets
 
 - [x] Rule 4
 - [x] Void/Non-Runner
-- [ ] Dead Heat
+- [x] Dead Heat
 
 ## Simple bets
 - [x] Single bet
