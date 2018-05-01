@@ -1,30 +1,38 @@
-import { Returns } from './returns.js';
-import * as errors from './errors.js';
+import { Returns } from "./returns.js";
+import * as errors from "./errors.js";
 
-import foreachCombination from 'foreach-combination';
+import foreachCombination from "foreach-combination";
 
 // Calculate a simple combination bet
 function combinationBet(n) {
   return (allSelections, returns, isEachWay) => {
     if (allSelections.length < n) {
-      throw new errors.InvalidSelectionCountError(`Expected at least ${n} selections`);
+      throw new errors.InvalidSelectionCountError(
+        `Expected at least ${n} selections`
+      );
     }
 
     foreachCombination(allSelections, n, (...selections) => {
       // Calculate win returns
       if (selections.every(selection => selection.appliesToWinMarket())) {
-        returns.addBetReturn(selections.reduce(
-          (acc, selection) => acc * selection.winMarketReturns(),
-          returns.unitStake));
+        returns.addBetReturn(
+          selections.reduce(
+            (acc, selection) => acc * selection.winMarketReturns(),
+            returns.unitStake
+          )
+        );
       } else {
         returns.addBetReturn(0);
       }
       // Calculate place returns, if this is a each-way bet
       if (isEachWay) {
         if (selections.every(selection => selection.appliesToPlaceMarket())) {
-          returns.addBetReturn(selections.reduce(
-            (acc, selection) => acc * selection.placeMarketReturns(),
-            returns.unitStake));
+          returns.addBetReturn(
+            selections.reduce(
+              (acc, selection) => acc * selection.placeMarketReturns(),
+              returns.unitStake
+            )
+          );
         } else {
           returns.addBetReturn(0);
         }
@@ -37,7 +45,9 @@ function combinationBet(n) {
 function cover(n, withSingles = false) {
   return (allSelections, returns, isEachWay) => {
     if (allSelections.length < n) {
-      throw new errors.InvalidSelectionCountError(`Expected at least ${n} selections`);
+      throw new errors.InvalidSelectionCountError(
+        `Expected at least ${n} selections`
+      );
     }
 
     foreachCombination(allSelections, n, (...selections) => {
@@ -59,6 +69,7 @@ const BET_TYPES = {
   // Full cover
   trixie: cover(3),
   yankee: cover(4),
+  superYankee: cover(5),
   canadian: cover(5),
   heinz: cover(6),
   superHeinz: cover(7),
@@ -70,7 +81,7 @@ const BET_TYPES = {
   lucky31: cover(5, true),
   lucky63: cover(6, true),
   // yap is a lucky 15 without any bonus applied, which we do not support anyway
-  yap: cover(4, true),
+  yap: cover(4, true)
 };
 
 // Bet constructor

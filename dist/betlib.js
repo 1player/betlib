@@ -201,7 +201,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 function combinationBet(n) {
   return function (allSelections, returns, isEachWay) {
     if (allSelections.length < n) {
-      throw new errors.InvalidSelectionCountError('Expected at least ' + n + ' selections');
+      throw new errors.InvalidSelectionCountError("Expected at least " + n + " selections");
     }
 
     (0, _foreachCombination2.default)(allSelections, n, function () {
@@ -241,7 +241,7 @@ function cover(n) {
 
   return function (allSelections, returns, isEachWay) {
     if (allSelections.length < n) {
-      throw new errors.InvalidSelectionCountError('Expected at least ' + n + ' selections');
+      throw new errors.InvalidSelectionCountError("Expected at least " + n + " selections");
     }
 
     (0, _foreachCombination2.default)(allSelections, n, function () {
@@ -267,6 +267,7 @@ var BET_TYPES = {
   // Full cover
   trixie: cover(3),
   yankee: cover(4),
+  superYankee: cover(5),
   canadian: cover(5),
   heinz: cover(6),
   superHeinz: cover(7),
@@ -308,7 +309,7 @@ var Bet = exports.Bet = function () {
   }
 
   _createClass(Bet, [{
-    key: 'settle',
+    key: "settle",
     value: function settle(selections) {
       var returns = new _returns.Returns(this.unitStake);
       this.betFn(selections, returns, this.isEachWay);
