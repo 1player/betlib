@@ -2,7 +2,7 @@
   "name": "betlib",
   "main": "dist/betlib.cjs.js",
   "module": "dist/betlib.esm.js",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A JS library to calculate popular UK bets",
   "dependencies": {
     "foreach-combination": "^1.0.0"
