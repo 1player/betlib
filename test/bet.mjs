@@ -1,7 +1,9 @@
-var should = require("chai").should(),
-  expect = require("chai").expect;
+import chai from "chai";
 
-var betlib = require("../dist/betlib");
+let should = chai.should(),
+  expect = chai.expect;
+
+import * as betlib from "../src/index.mjs";
 
 const SELECTIONS = [
   new betlib.WinSelection({ winOdds: 9, placeOddsFraction: "1/4" }),
