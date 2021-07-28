@@ -1,8 +1,7 @@
 {
   "name": "betlib",
-  "source": "src/index.mjs",
-  "main": "./dist/betlib.cjs.js",
-  "module": "./dist/betlib.module.js",
+  "main": "dist/betlib.cjs.js",
+  "module": "dist/betlib.esm.js",
   "version": "1.0.0",
   "description": "A JS library to calculate popular UK bets",
   "dependencies": {
