@@ -9,13 +9,13 @@
   },
   "devDependencies": {
     "chai": "^4.3.4",
-    "mocha": "^8.3.2",
-    "rollup": "^2.55.0"
+    "esbuild": "^0.12.19",
+    "mocha": "^8.3.2"
   },
   "scripts": {
-    "build": "rollup -c",
-    "dev": "rollup -c -w",
-    "test": "mocha --reporter spec"
+    "build": "node ./esbuild.js",
+    "test": "mocha --reporter spec",
+    "prepublish": "npm run build"
   },
   "repository": {
     "type": "git",
