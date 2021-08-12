@@ -5,7 +5,6 @@ const common = {
   entryPoints: ["./src/index.mjs"],
   bundle: true,
   platform: "node",
-  external: ["foreach-combination"],
 };
 
 build({

@@ -1,17 +1,14 @@
 import { Returns } from "./returns.mjs";
-
-import foreachCombination from "foreach-combination";
+import { combinations } from "./combinations.mjs";
 
 // Calculate a simple combination bet
 function combinationBet(n) {
   return (allSelections, returns, isEachWay) => {
     if (allSelections.length < n) {
-      throw new Error(
-        `Expected at least ${n} selections`
-      );
+      throw new Error(`Expected at least ${n} selections`);
     }
 
-    foreachCombination(allSelections, n, (...selections) => {
+    combinations(allSelections, n).forEach((selections) => {
       // Calculate win returns
       if (selections.every((selection) => selection.appliesToWinMarket())) {
         returns.addBetReturn(
@@ -44,12 +41,10 @@ function combinationBet(n) {
 function cover(n, withSingles = false) {
   return (allSelections, returns, isEachWay) => {
     if (allSelections.length < n) {
-      throw new Error(
-        `Expected at least ${n} selections`
-      );
+      throw new Error(`Expected at least ${n} selections`);
     }
 
-    foreachCombination(allSelections, n, (...selections) => {
+    combinations(allSelections, n).forEach((selections) => {
       for (let i = withSingles ? 1 : 2; i <= n; i++) {
         combinationBet(i)(selections, returns, isEachWay);
       }

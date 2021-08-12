@@ -4,9 +4,6 @@
   "module": "dist/betlib.esm.js",
   "version": "1.0.1",
   "description": "A JS library to calculate popular UK bets",
-  "dependencies": {
-    "foreach-combination": "^1.0.0"
-  },
   "devDependencies": {
     "chai": "^4.3.4",
     "esbuild": "^0.12.19",
